@@ -52,7 +52,7 @@ The template files (template.tex and related files) are provided to make documen
 **To use the template:**
 
 1. Copy the boxes and styling elements from `template.tex` as needed
-2. **Edit your document in `report.tex`** - this is the main file where you'll add your content
+2. **Edit your document in `lecture_notes.tex`** - this is the main file where you'll add your content
 3. Customize the copied elements to fit your content
 
 This approach keeps your main work organized while using the template as a reference for consistent formatting.
