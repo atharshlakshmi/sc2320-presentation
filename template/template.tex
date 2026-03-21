@@ -1,0 +1,350 @@
+% ============================================================
+%  Lecture Notes Template — Monotone Classification
+%  Based on: "Monotone Classification with Relative Approximations"
+%  Usage: Copy any box below and paste wherever you need it.
+% ============================================================
+
+\documentclass[11pt, a4paper]{article}
+
+% ---------- packages ----------
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{mdframed}          % coloured boxes
+\usepackage{enumitem}
+\usepackage{thmtools}
+\usepackage{graphicx}
+\usepackage{booktabs}          % nice tables
+
+% ---------- colours (simple, soft palette) ----------
+\definecolor{defblue}{RGB}{220, 232, 245}   % light steel blue
+\definecolor{thmgreen}{RGB}{220, 240, 225}  % light sage green
+\definecolor{lemyellow}{RGB}{255, 248, 220} % light cream
+\definecolor{propgray}{RGB}{235, 235, 235}  % light gray
+\definecolor{noteorange}{RGB}{255, 237, 213}% light peach
+\definecolor{rulecol}{RGB}{100, 130, 160}   % muted blue — used for box borders
+
+% ---------- box styles (mdframed) ----------
+\mdfdefinestyle{defstyle}{
+  backgroundcolor = defblue,
+  linecolor       = rulecol,
+  linewidth       = 1pt,
+  innertopmargin  = 6pt,
+  innerbottommargin = 6pt,
+  innerleftmargin = 8pt,
+  innerrightmargin = 8pt,
+  skipabove       = 8pt,
+  skipbelow       = 8pt,
+}
+
+\mdfdefinestyle{thmstyle}{
+  backgroundcolor = thmgreen,
+  linecolor       = rulecol,
+  linewidth       = 1pt,
+  innertopmargin  = 6pt,
+  innerbottommargin = 6pt,
+  innerleftmargin = 8pt,
+  innerrightmargin = 8pt,
+  skipabove       = 8pt,
+  skipbelow       = 8pt,
+}
+
+\mdfdefinestyle{lemstyle}{
+  backgroundcolor = lemyellow,
+  linecolor       = rulecol,
+  linewidth       = 1pt,
+  innertopmargin  = 6pt,
+  innerbottommargin = 6pt,
+  innerleftmargin = 8pt,
+  innerrightmargin = 8pt,
+  skipabove       = 8pt,
+  skipbelow       = 8pt,
+}
+
+\mdfdefinestyle{propstyle}{
+  backgroundcolor = propgray,
+  linecolor       = rulecol,
+  linewidth       = 1pt,
+  innertopmargin  = 6pt,
+  innerbottommargin = 6pt,
+  innerleftmargin = 8pt,
+  innerrightmargin = 8pt,
+  skipabove       = 8pt,
+  skipbelow       = 8pt,
+}
+
+\mdfdefinestyle{notestyle}{
+  backgroundcolor = noteorange,
+  linecolor       = rulecol,
+  linewidth       = 1pt,
+  innertopmargin  = 6pt,
+  innerbottommargin = 6pt,
+  innerleftmargin = 8pt,
+  innerrightmargin = 8pt,
+  skipabove       = 8pt,
+  skipbelow       = 8pt,
+}
+
+% ---------- theorem-like environments ----------
+\newtheoremstyle{boxed}{}{}{\normalfont}{}{\bfseries}{.}{.5em}{}
+
+\theoremstyle{boxed}
+\newtheorem{innerdefinition}{Definition}[section]
+\newtheorem{innertheorem}{Theorem}[section]
+\newtheorem{innerlemma}{Lemma}[section]
+\newtheorem{innerproposition}{Proposition}[section]
+\newtheorem{innercorollary}{Corollary}[section]
+\newtheorem{innerproblem}{Problem}[section]
+\newtheorem{innerexample}{Example}[section]
+\newtheorem{innerremark}{Remark}[section]
+
+% Wrap each in its coloured box
+% ── DEFINITION ──────────────────────────────────────────────
+\newenvironment{definition}
+  {\begin{mdframed}[style=defstyle]\begin{innerdefinition}}
+  {\end{innerdefinition}\end{mdframed}}
+
+% ── THEOREM ─────────────────────────────────────────────────
+\newenvironment{theorem}
+  {\begin{mdframed}[style=thmstyle]\begin{innertheorem}}
+  {\end{innertheorem}\end{mdframed}}
+
+% ── LEMMA ───────────────────────────────────────────────────
+\newenvironment{lemma}
+  {\begin{mdframed}[style=lemstyle]\begin{innerlemma}}
+  {\end{innerlemma}\end{mdframed}}
+
+% ── PROPOSITION ─────────────────────────────────────────────
+\newenvironment{proposition}
+  {\begin{mdframed}[style=propstyle]\begin{innerproposition}}
+  {\end{innerproposition}\end{mdframed}}
+
+% ── COROLLARY ───────────────────────────────────────────────
+\newenvironment{corollary}
+  {\begin{mdframed}[style=thmstyle]\begin{innercorollary}}
+  {\end{innercorollary}\end{mdframed}}
+
+% ── PROBLEM ─────────────────────────────────────────────────
+\newenvironment{problem}
+  {\begin{mdframed}[style=defstyle]\begin{innerproblem}}
+  {\end{innerproblem}\end{mdframed}}
+
+% ── EXAMPLE ─────────────────────────────────────────────────
+\newenvironment{example}
+  {\begin{mdframed}[style=notestyle]\begin{innerexample}}
+  {\end{innerexample}\end{mdframed}}
+
+% ── REMARK ──────────────────────────────────────────────────
+\newenvironment{remark}
+  {\begin{mdframed}[style=notestyle]\begin{innerremark}}
+  {\end{innerremark}\end{mdframed}}
+
+% Plain proof (no box needed — standard amsthm)
+% \begin{proof} ... \end{proof}  works out of the box.
+
+% ---------- common math shorthands ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Hmon}{\mathbb{H}_{\mathrm{mon}}}
+\newcommand{\err}{\mathrm{err}}
+\DeclareMathOperator{\E}{\mathbf{E}}
+\renewcommand{\Pr}{\mathbf{Pr}}
+\newcommand{\kstar}{k^{*}}
+\newcommand{\dom}{\succ}        % dominates
+\newcommand{\predom}{\prec}
+\newcommand{\preceqdom}{\preceq}
+
+% ============================================================
+\begin{document}
+
+% ---------- TITLE BLOCK ----------
+\title{\textbf{Lecture Notes}\\[4pt]
+       \large Monotone Classification with Relative Approximations}
+\author{Your Name \\ \small Your University}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+  Brief summary of what these notes cover.
+  Replace this with your own abstract or remove this block entirely.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+Write your introductory text here. Below is a quick demo of every
+reusable box. Copy–paste whichever you need.
+
+% ──────────────────────────────────────────────
+%  BOX 1 — DEFINITION
+%  Copy from \begin{definition} to \end{definition}
+% ──────────────────────────────────────────────
+\begin{definition}[Monotone Classifier]
+  A classifier $h : \R^d \to \{-1,1\}$ is \emph{monotone} if
+  $h(p) \ge h(q)$ for every $p,q \in \R^d$ satisfying $p \dom q$.
+\end{definition}
+
+% ──────────────────────────────────────────────
+%  BOX 2 — THEOREM
+%  Copy from \begin{theorem} to \end{theorem}
+% ──────────────────────────────────────────────
+\begin{theorem}[Upper Bound]\label{thm:upper}
+  For any $\epsilon > 0$, there exists an algorithm that finds a
+  $(1+\epsilon)$-approximate monotone classifier using
+  $O\!\left(\frac{\log n}{\epsilon}\right)$ label queries.
+\end{theorem}
+
+\begin{proof}
+  Write your proof here. The $\square$ is inserted automatically.
+\end{proof}
+
+% ──────────────────────────────────────────────
+%  BOX 3 — LEMMA
+%  Copy from \begin{lemma} to \end{lemma}
+% ──────────────────────────────────────────────
+\begin{lemma}\label{lem:key}
+  For any input $P$ and monotone classifier $h \in \Hmon$,
+  \[
+    \err_P(h) \;\ge\; \kstar.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Proof of the lemma.
+\end{proof}
+
+% ──────────────────────────────────────────────
+%  BOX 4 — PROPOSITION
+%  Copy from \begin{proposition} to \end{proposition}
+% ──────────────────────────────────────────────
+\begin{proposition}\label{prop:one}
+  If $P$ is monotone then $\kstar = 0$.
+\end{proposition}
+
+% ──────────────────────────────────────────────
+%  BOX 5 — COROLLARY
+%  Copy from \begin{corollary} to \end{corollary}
+% ──────────────────────────────────────────────
+\begin{corollary}\label{cor:one}
+  Theorem~\ref{thm:upper} implies that the algorithm of \ldots\ achieves
+  an error of at most $(1+\epsilon)\kstar$ with high probability.
+\end{corollary}
+
+% ──────────────────────────────────────────────
+%  BOX 6 — PROBLEM STATEMENT
+%  Copy from \begin{problem} to \end{problem}
+% ──────────────────────────────────────────────
+\begin{problem}[Monotone Classification with Relative Precision]\label{prob:main}
+  Given $\epsilon \ge 0$, find a monotone classifier whose error on $P$
+  is at most $(1+\epsilon)\kstar$.
+  The efficiency of an algorithm is measured by the number of elements probed.
+\end{problem}
+
+% ──────────────────────────────────────────────
+%  BOX 7 — EXAMPLE
+%  Copy from \begin{example} to \end{example}
+% ──────────────────────────────────────────────
+\begin{example}
+  Let $P = \{p_1, p_2, \ldots, p_n\} \subset \R^2$.
+  The optimal monotone classifier $h$ misclassifies only $p_1$, so $\kstar = 1$.
+\end{example}
+
+% ──────────────────────────────────────────────
+%  BOX 8 — REMARK / NOTE
+%  Copy from \begin{remark} to \end{remark}
+% ──────────────────────────────────────────────
+\begin{remark}
+  When $\epsilon = 0$ the problem reduces to finding an \emph{optimal}
+  monotone classifier, which is achievable in polynomial time after
+  revealing all labels.
+\end{remark}
+
+% ============================================================
+\section{Problem Definitions}
+% ============================================================
+
+\subsection{Math Conventions}
+
+For an integer $x \ge 1$, the notation $[x]$ denotes $\{1, 2, \ldots, x\}$.
+We write $x \le_{1+\epsilon} y$ to mean $x \le (1+\epsilon)y$.
+For any real $x \ge 1$, define $\mathrm{Log}\, x = \log_2(1+x)$.
+
+\subsection{Dominance}
+
+A point $p \in \R^d$ \emph{dominates} $q \in \R^d$ (written $p \dom q$) if
+$p \ne q$ and $p[i] \ge q[i]$ for all $i \in [d]$.
+
+% ── Inline numbered equation ──
+The optimal monotone error is
+\begin{equation}\label{eq:kstar}
+  \kstar \;=\; \min_{h \in \Hmon} \err_P(h).
+\end{equation}
+
+% ── Aligned multi-line equation ──
+The expected cost and error of a randomised algorithm $\mathcal{A}$ are
+\begin{align}
+  \text{expected cost}  &= \E[X], \label{eq:cost}\\
+  \text{expected error} &= \E[\err_P(h)]. \label{eq:error}
+\end{align}
+
+% ============================================================
+\section{Results}
+% ============================================================
+
+Insert your main results here. Use the theorem/lemma boxes from above.
+
+% ── Simple two-column table ──
+\begin{table}[h]
+  \centering
+  \begin{tabular}{lcc}
+    \toprule
+    Setting & Upper bound & Lower bound \\
+    \midrule
+    $\epsilon = 0$     & $O(n)$                & $\Omega(n)$    \\
+    $\epsilon \in (0,1)$ & $O(n / \epsilon)$   & $\Omega(n/\epsilon)$ \\
+    $\epsilon \ge 1$   & $O(\log n)$           & $\Omega(\log n)$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Summary of upper and lower bounds.}
+  \label{tab:bounds}
+\end{table}
+
+% ============================================================
+\section{Algorithms}
+% ============================================================
+
+Describe your algorithms here. Use \verb|\begin{enumerate}| for steps.
+
+\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=*]
+  \item Probe a random element $p \in P$ and observe $\mathrm{label}(p)$.
+  \item Update the current best classifier $h$.
+  \item Repeat until $\err_P(h) \le (1+\epsilon)\kstar$.
+\end{enumerate}
+
+% ============================================================
+\section{Proofs}
+% ============================================================
+
+Place detailed proofs here. Each proof should reference a labelled
+theorem or lemma, e.g.\ \emph{Proof of Theorem~\ref{thm:upper}}.
+
+% ============================================================
+\section*{References}
+% ============================================================
+
+\begin{thebibliography}{9}
+  \bibitem{tao18} Y.~Tao, ``Monotone Classification,'' \emph{PODS'18}.
+  \bibitem{tao21} Y.~Tao, ``Monotone Classification (Extended),'' \emph{PODS'21}.
+\end{thebibliography}
+
+\end{document}
