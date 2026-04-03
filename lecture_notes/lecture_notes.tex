@@ -164,185 +164,230 @@
 \begin{document}
 
 % ---------- TITLE BLOCK ----------
-\title{\textbf{Lecture Notes}\\[4pt]
-       \large Monotone Classification with Relative Approximations}
-\author{Your Name \\ \small Your University}
+\title{\textbf{Monotone Classification with Relative Approximations}\\[4pt]
+       \large Lecture Notes for SC2320 Data Analytics and Mining \\
+       }
+% \author{Your Name \\ \small Your University}
 
 \date{\today}
 \maketitle
 
-\begin{abstract}
-  Brief summary of what these notes cover.
-  Replace this with your own abstract or remove this block entirely.
-\end{abstract}
+% \begin{abstract}
+%   Brief summary of what these notes cover.
+%   Replace this with your own abstract or remove this block entirely.
+% \end{abstract}
 
-\tableofcontents
+\section*{Instructions to readers}
+The flow of this set of notes is in tandem to the flow of the original paper.
+It will also go in the same flow as the presentation slides.
+Concepts/Material/Information that is auxiliary to the core ideas of this paper will be outlined at the end of each section.
+
+% ============================================================
+\section*{Acronym Reference}
+% ============================================================
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Acronym} & \textbf{Full Form} \\
+    \midrule
+    ACR1 & Acronym One \\
+    ACR2 & Acronym Two \\
+    ACR3 & Acronym Three \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% \tableofcontents
+
+
+
 \newpage
 
 % ============================================================
-\section{Introduction}
+% COPY-PASTE ENVIRONMENT TEMPLATES
+% Uncomment any block and paste it wherever you need it.
 % ============================================================
 
-Write your introductory text here. Below is a quick demo of every
-reusable box. Copy–paste whichever you need.
+% % ──────────────────────────────────────────────
+% %  BOX 1 — DEFINITION
+% %  Copy from \begin{definition} to \end{definition}
+% % ──────────────────────────────────────────────
+% \begin{definition}[Monotone Classifier]
+%   A classifier $h : \R^d \to \{-1,1\}$ is \emph{monotone} if
+%   $h(p) \ge h(q)$ for every $p,q \in \R^d$ satisfying $p \dom q$.
+% \end{definition}
 
-% ──────────────────────────────────────────────
-%  BOX 1 — DEFINITION
-%  Copy from \begin{definition} to \end{definition}
-% ──────────────────────────────────────────────
-\begin{definition}[Monotone Classifier]
-  A classifier $h : \R^d \to \{-1,1\}$ is \emph{monotone} if
-  $h(p) \ge h(q)$ for every $p,q \in \R^d$ satisfying $p \dom q$.
-\end{definition}
+% % ──────────────────────────────────────────────
+% %  BOX 2 — THEOREM
+% %  Copy from \begin{theorem} to \end{theorem}
+% % ──────────────────────────────────────────────
+% \begin{theorem}[Upper Bound]\label{thm:upper}
+%   For any $\epsilon > 0$, there exists an algorithm that finds a
+%   $(1+\epsilon)$-approximate monotone classifier using
+%   $O\!\left(\frac{\log n}{\epsilon}\right)$ label queries.
+% \end{theorem}
 
-% ──────────────────────────────────────────────
-%  BOX 2 — THEOREM
-%  Copy from \begin{theorem} to \end{theorem}
-% ──────────────────────────────────────────────
-\begin{theorem}[Upper Bound]\label{thm:upper}
-  For any $\epsilon > 0$, there exists an algorithm that finds a
-  $(1+\epsilon)$-approximate monotone classifier using
-  $O\!\left(\frac{\log n}{\epsilon}\right)$ label queries.
-\end{theorem}
+% \begin{proof}
+%   Write your proof here. The $\square$ is inserted automatically.
+% \end{proof}
 
-\begin{proof}
-  Write your proof here. The $\square$ is inserted automatically.
-\end{proof}
+% % ──────────────────────────────────────────────
+% %  BOX 3 — LEMMA
+% %  Copy from \begin{lemma} to \end{lemma}
+% % ──────────────────────────────────────────────
+% \begin{lemma}\label{lem:key}
+%   For any input $P$ and monotone classifier $h \in \Hmon$,
+%   \[
+%     \err_P(h) \;\ge\; \kstar.
+%   \]
+% \end{lemma}
 
-% ──────────────────────────────────────────────
-%  BOX 3 — LEMMA
-%  Copy from \begin{lemma} to \end{lemma}
-% ──────────────────────────────────────────────
-\begin{lemma}\label{lem:key}
-  For any input $P$ and monotone classifier $h \in \Hmon$,
-  \[
-    \err_P(h) \;\ge\; \kstar.
-  \]
-\end{lemma}
+% \begin{proof}
+%   Proof of the lemma.
+% \end{proof}
 
-\begin{proof}
-  Proof of the lemma.
-\end{proof}
+% % ──────────────────────────────────────────────
+% %  BOX 4 — PROPOSITION
+% %  Copy from \begin{proposition} to \end{proposition}
+% % ──────────────────────────────────────────────
+% \begin{proposition}\label{prop:one}
+%   If $P$ is monotone then $\kstar = 0$.
+% \end{proposition}
 
-% ──────────────────────────────────────────────
-%  BOX 4 — PROPOSITION
-%  Copy from \begin{proposition} to \end{proposition}
-% ──────────────────────────────────────────────
-\begin{proposition}\label{prop:one}
-  If $P$ is monotone then $\kstar = 0$.
-\end{proposition}
+% % ──────────────────────────────────────────────
+% %  BOX 5 — COROLLARY
+% %  Copy from \begin{corollary} to \end{corollary}
+% % ──────────────────────────────────────────────
+% \begin{corollary}\label{cor:one}
+%   Theorem~\ref{thm:upper} implies that the algorithm of \ldots\ achieves
+%   an error of at most $(1+\epsilon)\kstar$ with high probability.
+% \end{corollary}
 
-% ──────────────────────────────────────────────
-%  BOX 5 — COROLLARY
-%  Copy from \begin{corollary} to \end{corollary}
-% ──────────────────────────────────────────────
-\begin{corollary}\label{cor:one}
-  Theorem~\ref{thm:upper} implies that the algorithm of \ldots\ achieves
-  an error of at most $(1+\epsilon)\kstar$ with high probability.
-\end{corollary}
+% % ──────────────────────────────────────────────
+% %  BOX 6 — PROBLEM STATEMENT
+% %  Copy from \begin{problem} to \end{problem}
+% % ──────────────────────────────────────────────
+% \begin{problem}[Monotone Classification with Relative Precision]\label{prob:main}
+%   Given $\epsilon \ge 0$, find a monotone classifier whose error on $P$
+%   is at most $(1+\epsilon)\kstar$.
+%   The efficiency of an algorithm is measured by the number of elements probed.
+% \end{problem}
 
-% ──────────────────────────────────────────────
-%  BOX 6 — PROBLEM STATEMENT
-%  Copy from \begin{problem} to \end{problem}
-% ──────────────────────────────────────────────
-\begin{problem}[Monotone Classification with Relative Precision]\label{prob:main}
-  Given $\epsilon \ge 0$, find a monotone classifier whose error on $P$
-  is at most $(1+\epsilon)\kstar$.
-  The efficiency of an algorithm is measured by the number of elements probed.
-\end{problem}
+% % ──────────────────────────────────────────────
+% %  BOX 7 — EXAMPLE
+% %  Copy from \begin{example} to \end{example}
+% % ──────────────────────────────────────────────
+% \begin{example}
+%   Let $P = \{p_1, p_2, \ldots, p_n\} \subset \R^2$.
+%   The optimal monotone classifier $h$ misclassifies only $p_1$, so $\kstar = 1$.
+% \end{example}
 
-% ──────────────────────────────────────────────
-%  BOX 7 — EXAMPLE
-%  Copy from \begin{example} to \end{example}
-% ──────────────────────────────────────────────
-\begin{example}
-  Let $P = \{p_1, p_2, \ldots, p_n\} \subset \R^2$.
-  The optimal monotone classifier $h$ misclassifies only $p_1$, so $\kstar = 1$.
-\end{example}
+% % ──────────────────────────────────────────────
+% %  BOX 8 — REMARK / NOTE
+% %  Copy from \begin{remark} to \end{remark}
+% % ──────────────────────────────────────────────
+% \begin{remark}
+%   When $\epsilon = 0$ the problem reduces to finding an \emph{optimal}
+%   monotone classifier, which is achievable in polynomial time after
+%   revealing all labels.
+% \end{remark}
 
-% ──────────────────────────────────────────────
-%  BOX 8 — REMARK / NOTE
-%  Copy from \begin{remark} to \end{remark}
-% ──────────────────────────────────────────────
+% ============================================================
+\section{Background and Motivation}
+% ============================================================
+
+\subsection{Entity Resolution}
+Entity Resolution is a process in Data Preprocessing and Integration that aims to address the issue of matching and merging records corresponding to the same real-world object.
+
 \begin{remark}
-  When $\epsilon = 0$ the problem reduces to finding an \emph{optimal}
-  monotone classifier, which is achievable in polynomial time after
-  revealing all labels.
+  Professor Tao's paper itself sometimes uses "Entity Matching" in the title and introduction to refer more broadly to the problem. For disambiguity in this set of notes, \textbf{"Entity Resolution"} will refer to the entire process while "Entity Matching" will refer to the process that the paper primarily focuses on.
 \end{remark}
+% \subsubsection{}
+
+
+
+\subsection{The ER Pipeline}
+% Overview of the pipeline stages:
+%   Preprocessing → Blocking (mention LSH) → Comparison → Matching
+% Flag Matching as the main focus of the paper.
+
+\subsection{Matching in Depth}
+
+\subsubsection{Why Human Labelling is Expensive}
+% Discuss the cost of obtaining ground-truth labels from human annotators.
+
+\subsubsection{The Binary Classification Objective}
+% Frame matching as a binary classification problem: match (+1) vs non-match (−1).
+
+\subsubsection{The Monotonicity Rule}
+% Introduce the dominance relation and the monotonicity constraint on classifiers.
+
+\subsubsection{Active Classification / Learning}
+% Motivate active learning: query only the most informative labels to reduce cost.
+
+\newpage
 
 % ============================================================
-\section{Problem Definitions}
+\section{RPE Algorithm}
 % ============================================================
 
-\subsection{Math Conventions}
+\subsection{The Algorithm}
+% Describe Random Probes with Elimination (RPE): iterative random probing
+% and elimination of elements via the monotonicity constraint.
 
-For an integer $x \ge 1$, the notation $[x]$ denotes $\{1, 2, \ldots, x\}$.
-We write $x \le_{1+\epsilon} y$ to mean $x \le (1+\epsilon)y$.
-For any real $x \ge 1$, define $\mathrm{Log}\, x = \log_2(1+x)$.
+\subsection{Why It Works}
+% Intuition and correctness argument behind the elimination strategy.
 
-\subsection{Dominance}
+\subsection{Guarantees and Limitations}
+% State the factor-of-2 approximation guarantee.
+% Discuss where RPE falls short (e.g.\ dependence on width w).
 
-A point $p \in \R^d$ \emph{dominates} $q \in \R^d$ (written $p \dom q$) if
-$p \ne q$ and $p[i] \ge q[i]$ for all $i \in [d]$.
-
-% ── Inline numbered equation ──
-The optimal monotone error is
-\begin{equation}\label{eq:kstar}
-  \kstar \;=\; \min_{h \in \Hmon} \err_P(h).
-\end{equation}
-
-% ── Aligned multi-line equation ──
-The expected cost and error of a randomised algorithm $\mathcal{A}$ are
-\begin{align}
-  \text{expected cost}  &= \E[X], \label{eq:cost}\\
-  \text{expected error} &= \E[\err_P(h)]. \label{eq:error}
-\end{align}
+\newpage
 
 % ============================================================
-\section{Results}
+\section{Coresets (RCC)}
 % ============================================================
 
-Insert your main results here. Use the theorem/lemma boxes from above.
+\subsection{Why RPE Isn't Enough}
+% Explain the gap left by RPE and why a $(1+\varepsilon)$ guarantee requires more.
 
-% ── Simple two-column table ──
-\begin{table}[h]
-  \centering
-  \begin{tabular}{lcc}
-    \toprule
-    Setting & Upper bound & Lower bound \\
-    \midrule
-    $\epsilon = 0$     & $O(n)$                & $\Omega(n)$    \\
-    $\epsilon \in (0,1)$ & $O(n / \epsilon)$   & $\Omega(n/\epsilon)$ \\
-    $\epsilon \ge 1$   & $O(\log n)$           & $\Omega(\log n)$ \\
-    \bottomrule
-  \end{tabular}
-  \caption{Summary of upper and lower bounds.}
-  \label{tab:bounds}
-\end{table}
+\subsection{The Coreset Technique}
+% Introduce relative-comparison coresets (RCC): a weighted subset Z \subseteq P
+% whose weighted error approximates err_P(h) to within relative error \varepsilon/4.
 
+\subsection{Achieving the $1{+}\varepsilon$ Guarantee}
+% Show how the coreset construction feeds into the full algorithm (Corollary 7)
+% to obtain a $(1+\varepsilon)k^*$ error bound.
+
+\newpage
 % ============================================================
-\section{Algorithms}
+\section{Proofs and Lower Bounds}
 % ============================================================
 
-Describe your algorithms here. Use \verb|\begin{enumerate}| for steps.
+\subsection{Lower Bound Results}
+% State Theorems 10, 13, 14: \Omega(n) for \varepsilon=0;
+% lower bounds for constant and arbitrary approximation ratios.
 
-\begin{enumerate}[label=\textbf{Step \arabic*.}, leftmargin=*]
-  \item Probe a random element $p \in P$ and observe $\mathrm{label}(p)$.
-  \item Update the current best classifier $h$.
-  \item Repeat until $\err_P(h) \le (1+\epsilon)\kstar$.
-\end{enumerate}
+\subsection{Near-Optimality of the Algorithms}
+% Argue that the upper bounds from RPE and RCC match the lower bounds
+% up to logarithmic factors, establishing near-optimality.
+
+\subsection{Mathematical Machinery}
+% Key tools used in proofs: concentration bounds, VC-dimension,
+% disagreement coefficient, and the attrition-and-elimination game.
+
+\newpage
 
 % ============================================================
-\section{Proofs}
+\section*{Summary}
 % ============================================================
-
-Place detailed proofs here. Each proof should reference a labelled
-theorem or lemma, e.g.\ \emph{Proof of Theorem~\ref{thm:upper}}.
+% Brief wrap-up: key takeaways, significance of results, and open questions.
 
 % ============================================================
-\section*{References}
+% \section*{References}
 % ============================================================
-
 \begin{thebibliography}{9}
   \bibitem{tao18} Y.~Tao, ``Monotone Classification,'' \emph{PODS'18}.
   \bibitem{tao21} Y.~Tao, ``Monotone Classification (Extended),'' \emph{PODS'21}.
