@@ -192,8 +192,8 @@ Concepts/Material/Information that is auxiliary to the core ideas of this paper 
     \toprule
     \textbf{Acronym} & \textbf{Full Form} \\
     \midrule
-    ACR1 & Acronym One \\
-    ACR2 & Acronym Two \\
+    ER & Entity Resoluton \\
+    EM & Entity Matching \\
     ACR3 & Acronym Three \\
     \bottomrule
   \end{tabular}
@@ -297,21 +297,25 @@ Concepts/Material/Information that is auxiliary to the core ideas of this paper 
 % ============================================================
 \section{Background and Motivation}
 % ============================================================
-
-\subsection{Entity Resolution}
-Entity Resolution is a process in Data Preprocessing and Integration that aims to address the issue of matching and merging records corresponding to the same real-world object.
-
 \begin{remark}
-  Professor Tao's paper itself sometimes uses "Entity Matching" in the title and introduction to refer more broadly to the problem. For disambiguity in this set of notes, \textbf{"Entity Resolution"} will refer to the entire process while "Entity Matching" will refer to the process that the paper primarily focuses on.
+  Professor Tao's paper itself sometimes uses Entity Matching in the title and introduction to refer more broadly to the problem. For disambiguity in this set of notes, \textbf{Entity Resolution} will refer to the entire process while \textbf{Entity Matching} will refer to the process that the paper primarily focuses on.
 \end{remark}
+\subsection{The Matching Problem}
+Consider Entities as products in this scenario. Consider two sets of product listings, $P_1$ and $P_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. The goal of Entity Matching is to decide, for every pair $(p_1, p_2) \in P_1 \times P_2$, whether $p_1$ and $p_2$ refer to the same real-world product.
+
+What makes this non-trivial is that even a genuinely matching pair may disagree on attribute values. For instance, one platform may list a product as \textit{``Sony WH-1000XM5''} while another lists it as \textit{``Sony Noise Cancelling Headphones XM5 Series''}. They are referring to the same product but with different representations. Thus, comparing attributes alone is insufficient. To attain maximum accuracy in entity matching, it falls upon a human expert to manually inspect each pair and make a verdict. However, With thousands of listings on each platform and counting, the number of pairs 
+in $P_1 \times P_2$ grows quadratically - making manual inspection labor intensive and expensive. This motivates the need for a more systematic and efficient approach to Entity Matching.
 % \subsubsection{}
-
-
 
 \subsection{The ER Pipeline}
 % Overview of the pipeline stages:
 %   Preprocessing → Blocking (mention LSH) → Comparison → Matching
 % Flag Matching as the main focus of the paper.
+To systematically address the Entity Matching problem, the task is 
+transformed into a multidimensional classification problem through the Entity Resolution pipeline. Following the framing of Tao \cite{tao2026}, this pipeline consists of three key steps: 
+\textbf{Blocking}, \textbf{Comparison}, and \textbf{Matching}. 
+The first two steps serve as preprocessing stages that progressively 
+reduce and structure the problem, while the third step --- \textbf{Matching} --- is the primary focus of this paper.
 
 \subsection{Matching in Depth}
 
