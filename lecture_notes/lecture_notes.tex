@@ -136,7 +136,7 @@
 
 % ── EXAMPLE ─────────────────────────────────────────────────
 \newenvironment{example}
-  {\begin{mdframed}[style=notestyle]\begin{innerexample}}
+  {\begin{mdframed}[style=thmstyle]\begin{innerexample}}
   {\end{innerexample}\end{mdframed}}
 
 % ── REMARK ──────────────────────────────────────────────────
@@ -299,25 +299,24 @@ Concepts/Material/Information that is auxiliary to the core ideas of this paper 
 % ============================================================
 \subsection{The Challenge of Entity Matching}
 \begin{definition}[Entity Matching]
-  Given two sets of entities  $E_1$  and $E_2$, the task is to determine, for every pair $(e_1, e_2) \in E_1 \times E_2$, whether $e_1$ and $e_2$ refer to the same real-world entity. It is a binary classification task that determines whether a candidate pair is a match $(+1)$ or non-match $(-1)$.
+  Given two sets of entities  $E_1$  and $E_2$, the task is to determine, for every pair $(e_1, e_2) \in E_1 \times E_2$, whether $e_1$ and $e_2$ refer to the same real-world entity. It is a binary classification task that determines whether a candidate pair is a match $(+1)$ or non-match $(-1)$ \cite{tao21}.
 \end{definition}
 
-Consider Entities as products in this scenario. Let's say we have two sets of product listings, $P_1$ and $P_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada respectively. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. The goal of Entity Matching in this scenario is to decide, for every pair $(p_1, p_2) \in P_1 \times P_2$, whether $p_1$ and $p_2$ refer to the same real-world product.
+To motivate the problem, consider the following scenario where we have two sets of \texttt{entities} that we refer to here as product listings - $E_1$ and $E_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada respectively. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. The goal of Entity Matching in this scenario is to decide, for every pair $(e_1, e_2) \in E_1 \times E_2$, if they are referring to the same real-world product. 
 
-What makes this non-trivial is that even a genuinely matching pair may disagree on attribute values. For instance, one platform may list a product as \textit{``Sony WH-1000XM5''} while another lists it as \textit{``Sony Noise Cancelling Headphones XM5 Series''}. They are referring to the same product but with different representations. It is therefore insufficient to simply compare entities on this level. To attain maximum accuracy in entity matching, it falls upon a human expert to manually inspect each pair and make a verdict. However, with thousands of listings on each platform, the number of pairs 
-in $P_1 \times P_2$ grows quadratically - making manual inspection labor intensive and expensive. This motivates the need for a more systematic and efficient approach to Entity Matching.
+What makes this non-trivial is that even a genuinely matching pair may disagree on attribute values. For instance, one platform may list a product as \textit{``Sony WH-1000XM5''} while another lists it as \textit{``Sony Noise Cancelling Headphones XM5 Series''}. They are referring to the same product but with different representations. It is therefore insufficient to rely solely on attribute-level comparison to determine a match. To attain maximum accuracy in entity matching, it falls upon a human expert to manually inspect each pair and make a verdict. However, with thousands of listings on each platform, the number of pairs in $E_1 \times E_2$ grows quadratically - making manual inspection labor intensive and expensive. This motivates the need for a more systematic and efficient approach to Entity Matching.
 % \subsubsection{}
 
 \subsection{The Entity Resolution (ER) Pipeline}
 % Overview of the pipeline stages:
 %   Preprocessing → Blocking (mention LSH) → Comparison → Matching
 % Flag Matching as the main focus of the paper.
-To address the Entity Matching Problem, a common approach is to make it a challenge of classification. This is done by passing datasets through what is known broadly as the ER Pipeline consisting of three key steps: \textbf{Blocking}, \textbf{Comparison}, and \textbf{Matching}.  The first two steps serve as preprocessing stages that progressively reduce and structure the problem, while the third step is what Entity Matching entails and is the primary focus of the paper. Before diving deep into the third step, we will go over the first two steps in brief.
+To address the Entity Matching Problem, we transform it into a classification problem. This is done by passing datasets through an ER Pipeline consisting of three key steps: \textbf{Blocking}, \textbf{Comparison}, and \textbf{Matching}.  The first two steps serve as preprocessing stages that progressively reduce and structure the problem, while the third step is what Entity Matching entails and is the primary focus of the paper. We will go over the first two steps in brief before diving into greater detail on the third.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.85\textwidth]{../pipeline.png}
-  \caption{The Entity Resolution Pipeline. The \textbf{Matching} stage is what will be covered in detail.}
+  \caption{The ER Pipeline.}
   % : Dataset $\to$ Blocking $\to$ Comparison $\to$ Matching.
   \label{fig:er-pipeline}
 \end{figure}
@@ -341,25 +340,34 @@ The criterion used for blocking is \textbf{application-dependent}; there is no u
   The heuristic is therefore dictated by which attributes are reliable and meaningful in the specific domain.
 
   A notable example of a more general, domain-agnostic blocking heuristic is
-  \textbf{Locality Sensitive Hashing (LSH)}. It groups similar pairs into candidate buckets based on hash collisions, this was covered in Week 3 of this course.
+  \textbf{Locality Sensitive Hashing (LSH)}. It groups similar pairs into candidate buckets based on hash collisions, this was covered in Chapter 3 of this course.
 \end{remark}
 
 \subsubsection{Comparison}
+For each remaining pair $(e_1, e_2) \in S$, the comparison step quantifies their similarity across $d$ attributes using a set of similarity functions $sim_1, sim_2, \ldots, sim_d$. The $i$-th coordinate of the resulting point $p_{e_1,e_2}$ equals $sim_i(e_1, e_2)$, where a higher value indicates greater similarity on that attribute. The choice of similarity function depends on the attribute type:
+\begin{itemize}
+  \item For numerical attributes such as \texttt{p-price}, one may use $-|e_1.\texttt{price} - e_2.\texttt{price}|$, where the negation ensures consistency with the convention that higher values reflect greater similarity. 
+  \item For text attributes such as \texttt{p-name} and \texttt{p-description}, functions such as edit distance, Jaccard similarity, or cosine similarity may be employed. 
+\end{itemize}
 
+This process yields a $d$-dimensional set of points $P = \{p_{e_1,e_2} \mid (e_1, e_2) \in S\}$ which is handed over to the Matching step.
+\begin{example}
 
+\end{example}
 
-\subsection{Matching}
+\subsubsection{Matching}
+The entity matching objective is now made a binary classification task of assigning each point $p_{e_1,e_2} \in P$ to its correct ground truth label, which is $+1$ for a matching pair and $-1$ otherwise. While the ultimate approach to this would be with human judgement, this paper introduces \textbf{Monotone Classification} as a way to automate the process while ensuring a high degree of labelling accuracy.
+% The naive approach to this through human judgement, which can guarantee correctness but with the downside of becoming expensive as earlier mentioned. This paper proposes a more automated approach --- 
 
-\subsubsection{Why Human Labelling is Expensive}
-% Discuss the cost of obtaining ground-truth labels from human annotators.
+\subsection{Monotone Classification}
+To minimize the reliance on human judgement, we instead want to use a classifier to correctly determine the correct label to each of the given points from $P$ in $d$ dimensional space. So first, we can formally define our classifier:
 
-\subsubsection{The Binary Classification Objective}
-% Frame matching as a binary classification problem: match (+1) vs non-match (−1).
+$$ $$
 
-\subsubsection{The Monotonicity Rule}
+\subsubsection{The Importance of Monotonicity}
 % Introduce the dominance relation and the monotonicity constraint on classifiers.
 
-\subsubsection{Active Classification / Learning}
+\subsubsection{Active Classification}
 % Motivate active learning: query only the most informative labels to reduce cost.
 
 \newpage
