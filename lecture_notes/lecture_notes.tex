@@ -131,7 +131,7 @@
 
 % ── PROBLEM ─────────────────────────────────────────────────
 \newenvironment{problem}
-  {\begin{mdframed}[style=defstyle]\begin{innerproblem}}
+  {\begin{mdframed}[style=propstyle]\begin{innerproblem}}
   {\end{innerproblem}\end{mdframed}}
 
 % ── EXAMPLE ─────────────────────────────────────────────────
@@ -322,9 +322,9 @@ To address the Entity Matching Problem, we transform it into a classification pr
 \end{figure}
 
 \subsubsection{Blocking}
-As mentioned earlier in 1.1, the two entity sets $P_1$ and $P_2$ can grow quadratically, making it computationally infeasible to compare every pair. The goal of blocking is to narrow the search space down to a smaller candidate subset $S \subseteq P_1 \times P_2$, retaining only pairs that are plausible matches based on an application-dependent heuristic.
+As mentioned earlier in 1.1, the two entity sets $E_1$ and $E_2$ can grow quadratically, making it computationally infeasible to compare every pair. The goal of blocking is to narrow the search space down to a smaller candidate subset $S \subseteq E_1 \times E_2$, retaining only pairs that are plausible matches based on an application-dependent heuristic.
 
-Going back to the Shopee-Lazada example, one may restrict $S$ to only those pairs $(p_1, p_2)$ where \texttt{p-year} agrees across both listings. Note that blocking is optional --- if skipped, $S = P_1 \times P_2$.
+Going back to the Shopee-Lazada example, one may restrict $S$ to only those pairs $(e_1, e_2)$ where \texttt{p-year} agrees across both listings. Note that blocking is optional --- if skipped, $S = E_1 \times E_2$.
 \newpage
 \begin{remark}[Application-Dependent Heuristic]
 
@@ -356,19 +356,99 @@ This process yields a $d$-dimensional set of points $P = \{p_{e_1,e_2} \mid (e_1
 \end{example}
 
 \subsubsection{Matching}
-The entity matching objective is now made a binary classification task of assigning each point $p_{e_1,e_2} \in P$ to its correct ground truth label, which is $+1$ for a matching pair and $-1$ otherwise. While the ultimate approach to this would be with human judgement, this paper introduces \textbf{Monotone Classification} as a way to automate the process while ensuring a high degree of labelling accuracy.
+The entity matching objective now becomes a binary classification task of assigning each point $p_{e_1,e_2} \in P$ to its correct ground truth label, which is $+1$ for a matching pair and $-1$ otherwise. While the ultimate approach to this would be with human judgement, this paper introduces \textbf{Monotone Classification} as a way to automate the process while ensuring a high degree of labelling accuracy.
 % The naive approach to this through human judgement, which can guarantee correctness but with the downside of becoming expensive as earlier mentioned. This paper proposes a more automated approach --- 
 
 \subsection{Monotone Classification}
-To minimize the reliance on human judgement, we instead want to use a classifier to correctly determine the correct label to each of the given points from $P$ in $d$ dimensional space. So first, we can formally define our classifier:
+Instead of relying on human judgement, we want to find a classifier to correctly label matching and non-matching entities.
 
-$$ $$
+The input is the set $P$ of $n$ points in $\R^{d}$ for $d \geq 1$ that we obtained from the Comparison step. Each point $p \in P$ holds a label from $\{-1, 1\}$ which is represented as $label(p)$.
 
-\subsubsection{The Importance of Monotonicity}
-% Introduce the dominance relation and the monotonicity constraint on classifiers.
+We first define a classifier as a function:
+$$ h : \R^{d} \rightarrow \{-1, +1\}$$
 
-\subsubsection{Active Classification}
-% Motivate active learning: query only the most informative labels to reduce cost.
+where $h(p) = label(p)$ is a correct classification made by $h$ and will be a misclassification otherwise.
+
+The question is, what would make a good classifier in this context?
+
+\subsubsection{The Monotonicity Constraint}
+To answer this, we first introduce the notion of \textbf{dominance}.
+We say that a point $p \in \mathbb{R}^d$ \textit{dominates} another point $q \in \mathbb{R}^d$, written $p \succ q$, if:
+
+$$p[i] \geq q[i] \quad \text{for all } i \in [d]$$
+
+That is, $p$ scores at least as high as $q$ on every attribute. In the context of entity matching, this means that the pair represented by $p$ is at least as similar as the pair represented by $q$ on every feature.
+
+This supports the \textbf{Monotonicity Constraint}. A classifier $h$ is said to be \textbf{monotone} if:
+
+$$p \succ q \implies h(p) \geq h(q)$$
+Intuitively, if a pair $p$ is at least as similar as $q$ on every attribute, it would be contradictory for $h$ to label $p$ as a non-match $(-1)$ while labeling $q$ as a match $(+1)$. A more similar pair should receive at least as positive a label. We denote the set of all monotone classifiers as $\mathbb{H}_{mon}$. So for entity matching, the key criteria of our classifier is that it must be \textbf{monotone}.
+
+\subsubsection{The Optimal Monotone Error}
+Given a classifier $h$, its \textbf{error} on $P$ is defined as the number of points it misclassifies:
+
+$$err_P(h) = \sum_{p \in P} \mathbf{1}_{h(p) \neq label(p)}$$
+
+That is, the total count of points in $P$ whose assigned label differs from their ground truth. A classifier $h \in \mathbb{H}_{mon}$ is said to be \textbf{optimal} on $P$ if it achieves the smallest possible error among all monotone classifiers. We define this minimum achievable error as the \textbf{Optimal Monotone Error}:
+
+$$k^* = \min_{h \in \mathbb{H}_{mon}} err_P(h)$$
+
+Note that $k^*$ need not be zero --- in practice, the labels in $P$ may not perfectly obey monotonicity due to noise in the data, meaning even the best monotone classifier will misclassify some points.
+
+We now want an algorithm $\mathcal{A}$ to find a classifier from $\mathbb{H}_{mon}$ with low error on $P$. Note that in the beginning, the labels on all points in $P$ are hidden. In order for $\mathcal{A}$ to gain better understanding in forming an optimal classifier, it is allowed to query an \emph{oracle} --- a human expert in practice -- to reveal the ground truth label of a chosen point $p \in P$. This action is defined as a \emph{probe}. To assess the efficiency of the $\mathcal{A}$, we can measure its cost by the number of \emph{probes} it makes.
+
+To find an optimal monotone classifer on $P$, one can simply have $\mathcal{A}$ to probe all of $P$ with a cost of n. On the other hand, not probing at all will incurr zero cost but the classifier may perform poorly on $P$. This presents us with the challenge of minimizing the number of probes while still producing a classifier with sufficiently low error.
+
+Formally, given a tolerance parameter $\epsilon \geq 0$, the goal is to determine the minimum number of probes required to guarantee a classifier with error at most $(1 + \epsilon) \cdot k^*$. This is defined formally below.
+
+\begin{problem}[Monotone Classification with Relative Precision Guarantees]\label{prob:main}
+Given a real value $\epsilon \geq 0$, find a monotone classifier $h \in \mathbb{H}_{mon}$ whose error on $P$ is at most $(1 + \epsilon) \cdot k^*$, while minimizing the number of probes made by $\mathcal{A}$.
+\end{problem}
+
+Note that when $\epsilon = 0$, the algorithm must find an exactly optimal classifier, which as we will see requires $\Omega(n)$ probes in the worst case --- essentially probing all of $P$. This justifies the introduction of $\epsilon > 0$, where even a small tolerance dramatically reduces the probing cost. The remainder of this paper studies how efficiently this problem can be solved across the full range of $\epsilon$.
+
+\subsection{Active Classification (Supplementary)}
+To motivate Active Classification, we first revisit a familiar example of \textbf{passive classification} --- the \textbf{Perceptron Algorithm}, covered in SC2300 Machine Learning. Recall that the Perceptron is a mistake-driven algorithm that iterates through all training examples $S_n = \{(x^{(t)}, y^{(t)}), t = 1, \ldots, n\}$, where both the points \textit{and} their labels are fully visible from the start. It updates its parameter vector $\theta$ whenever a misclassification occurs, converging to a linear classifier that correctly separates all training examples --- provided they are linearly separable. This is the \textbf{realizable case}.
+
+\begin{remark}[Realizable Case]
+A classification problem is \textbf{realizable} if there exists a classifier $h \in \mathbb{H}_{mon}$ that correctly classifies all points in $P$ with zero error, i.e., $k^* = 0$. This is analogous to linear separability in the Perceptron setting.
+\end{remark}
+
+When data is not linearly separable, the Perceptron fails to converge --- motivating the use of \textbf{hinge loss} to tolerate a margin of error. The same challenge arises here: in practice, the labels in $P$ rarely obey monotonicity perfectly, meaning no monotone classifier can achieve zero error. This is the \textbf{non-realizable case}.
+
+\begin{remark}[Non-Realizable Case]
+A classification problem is \textbf{non-realizable} if no classifier $h \in \mathbb{H}_{mon}$ can achieve zero error on $P$, i.e., $k^* > 0$. This arises when the labels in $P$ contain noise --- points that violate monotonicity regardless of which classifier is chosen. This is analogous to the non-linearly separable case in SC2300.
+\end{remark}
+
+\begin{remark}
+Just as hinge loss introduces a tolerance for misclassified 
+points in the non-separable case, this paper introduces 
+$(1+\epsilon)k^*$ as a multiplicative tolerance for the 
+non-realizable case --- same philosophy, different context.
+\end{remark}
+
+In the context of Entity Matching, the non-realizable case is the norm. Furthermore, unlike the Perceptron, labels are \textbf{not} visible from the start --- they are hidden and can only be revealed through probing. This is where \textbf{Active Classification} comes in. Devise a learning strategy where the algorithm selectively chooses which points to probe rather than requiring all labels upfront, gathering just enough evidence to construct a classifier with error at most $(1+\epsilon)k^*$ while minimizing the number of probes. In other words, Active Classification takes into account cost apart from just accuracy. 
+
+\newpage
+The contrast with passive classification is summarized below:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\hline
+ & \textbf{Passive (Perceptron)} & 
+ \textbf{Active (This Paper)} \\
+\hline
+Labels & All visible from start & Hidden, revealed via probes \\
+Setting & Realizable ($k^* = 0$) & Non-realizable ($k^* > 0$) \\
+Cost metric & Number of iterations & Number of probes \\
+Goal & Zero training error & $(1+\epsilon)k^*$ error \\
+\hline
+\end{tabular}
+\caption{Passive vs.\ Active Classification}
+\end{table}
+
+A key limitation of existing active learning approaches is that they require prior knowledge of $k^*$ --- the optimal monotone error --- before the algorithm even begins. This is an unrealistic assumption in practice, since $k^*$ can only be determined after all labels are revealed. This paper proposes algorithms that require no such prior knowledge, working instead by strategically probing points to implicitly converge towards a $(1+\epsilon)$-approximate solution --- which we examine in the sections that follow.
 
 \newpage
 
