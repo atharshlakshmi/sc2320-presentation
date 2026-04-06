@@ -517,8 +517,8 @@ We sidestep the $\Omega(n)$ barrier by constructing $F$ satisfying a weaker cond
  
 The key insight: $\Delta$ cancels whenever we \emph{compare} two classifiers. We never need to know its value — only its existence.
 
-\medskip
-\noindent\textbf{Running example.} We will trace a small 1D instance through the entire construction. Let $P = \{1, 2, 3, 4, 5, 6, 7, 8\}$ with labels
+\subsubsection{Example (continued)} 
+We will trace a small 1D instance through the entire construction. Let $P = \{1, 2, 3, 4, 5, 6, 7, 8\}$ with labels
 \[
   \underbrace{-1, -1, -1, -1}_{\text{points } 1\text{--}4},\; \underbrace{+1, +1, +1, +1}_{\text{points } 5\text{--}8}.
 \]
@@ -537,12 +537,12 @@ We realise $F$ via a \textbf{relative-comparison coreset}: a weighted subset $Z 
   satisfies \eqref{eq:Fprop} for every $h \in \Hmon$ --- i.e., $\mathrm{w\text{-}err}_Z$ serves as the desired function $F$.
 \end{definition}
  
-The novelty of the unknown-$\Delta$ approach is precisely that classical coresets must approximate $\mathrm{err}_P(h)$ itself (costing $\Omega(n)$ probes), whereas here $\Delta$ absorbs the approximation slack and never need to be computed.
+The novelty of the unknown-$\Delta$ approach is that classical coresets approximate $\mathrm{err}_P(h)$ itself (costing $\Omega(n)$ probes), whereas here $\Delta$ never needs to be computed.
 
 % ─────────────────────────────────────────────────────────────
 \subsection{Building the Coreset in 1D: The Recursive Framework}
  
-The 1D construction works by solving the following auxiliary problem at every level of the recursion. The coreset is built by the algorithm \textsc{BuildCoreset}, which solves Problem~\ref{prob:two} recursively on a progressively smaller middle portion of $P$, assembling $Z$ along the way.
+The 1D construction works by solving the following problem at every level of recursion. The coreset is built by the algorithm \textsc{BuildCoreset}, which solves Problem~\ref{prob:two} recursively.
  
 \begin{problem}[1D Function Approximation]\label{prob:two}
   Let $P$ be a multiset of 1D labeled points (as in Problem~\ref{prob:main} with $d=1$), and $\varepsilon \in (0,1]$. Find a function $F : \Hmon \to \R$ such that every $h \in \Hmon$ satisfies simultaneously:
@@ -553,34 +553,30 @@ The 1D construction works by solving the following auxiliary problem at every le
   for some (possibly unknown) $\Delta$ with $|\Delta| \le \varepsilon|P|/64$.
 \end{problem}
  
-\subsubsection{Conditions of Problem~\ref{prob:two}:}
-Condition~\eqref{eq:p2abs} requires $F(h)$ to be an accurate absolute approximation of $\mathrm{err}_P(h)$. Condition~\eqref{eq:p2rel} coincides with~\eqref{eq:Fprop}, thereby yielding the relative $\varepsilon$-comparison property through Proposition~\ref{prop:Fimplies}. In the regime where $\mathrm{err}_P(h)$ is large (at least $|P|/16$-), condition~\eqref{eq:p2abs} alone is sufficient to imply~\eqref{eq:p2rel} with $\Delta = 0$, because the additive tolerance $\varepsilon|P|/64$ is in that case no greater than $\frac{\varepsilon}{4}\mathrm{err}_P(h)$. The real challenge, and the reason for the unknown quantity $\Delta$, emerges when $\mathrm{err}_P(h)$ is small.
- 
 
 \subsubsection{Estimating Error via Sampling (Functions $G_1$, $G_2$, $F_\alpha$)}
- 
 At each recursion level on a set $Q \subseteq P$, we draw a uniform sample $S$ of size $O\!\left(\frac{1}{\varepsilon^2}\log\frac{|Q|\,\ell}{\delta}\right)$ from $Q$, where $\ell = O(\log n)$ is the number of recursion levels. Define
 \[
   G(h) \;:=\; \frac{|Q|}{|S|}\cdot \mathrm{err}_S(h).
 \]
 By a standard concentration bound, $G$ satisfies condition~\eqref{eq:p2abs} for $Q$ simultaneously for all $h \in \Hmon$, with high probability. Three such estimates are used per level:
 \begin{itemize}
-  \item $G_1$, sampled from the full $P$, is used to \emph{locate the split point}. It does not enter the coreset directly.
+  \item $G_1$, sampled from the full $P$, is used to \emph{locate the split point}. Does not enter the coreset.
   \item $G_2$, sampled from $P_{\mathrm{rest}}$, approximates $\mathrm{err}_{P_{\mathrm{rest}}}(h)$ and contributes its sampled points to $Z$.
   \item $F_\alpha$, sampled from $P_\alpha$, approximates $\mathrm{err}_{P_\alpha}(h)$ and contributes its sampled points to $Z$.
 \end{itemize}
+
 Together, the target function for Problem~\ref{prob:two}, 
 \[
-F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h) 
+F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)
 \]
-
 where $F_{\mathrm{mid}}$ comes from recursion on $P_{\mathrm{mid}}$ satisfies both conditions of Problem~\ref{prob:two} for the full $P$.
 
-As there are $\ell$ levels, the overall cost is $O\!\left(\frac{\ell}{\epsilon^2} \log \frac{n}{\delta}\right) = O\!\left(\frac{\log n}{\epsilon^2} \cdot \log \frac{n}{\delta}\right)$, which lets us sovle Problem~\ref{prob:two} with a probability of at least $1 - \delta$.
- 
 \medskip
-\noindent\textbf{Example (continued).} 
+As there are $\ell$ levels, the overall cost is $O\!\left(\frac{\ell}{\epsilon^2} \log \frac{n}{\delta}\right) = O\!\left(\frac{\log n}{\epsilon^2} \cdot \log \frac{n}{\delta}\right)$, which lets us sovle Problem~\ref{prob:two} with a probability of at least $1 - \delta$.
 
+\medskip
+\subsubsection{Example (continued)}
 \begin{itemize}
   \item Suppose at the top level we draw $S_1 = \{2, 5, 7\}$ from $P$, with labels $-1, +1, +1$.
   \item For $h_{4.5}$ (optimal): $\mathrm{err}_{S_1}(h_{4.5}) = 0$, so $G_1(h_{4.5}) = 0$. True error is also $0$; condition~\eqref{eq:p2abs} holds trivially ($|0 - 0| = 0 \le 0.0625$).
@@ -611,9 +607,8 @@ Crucially, classifiers $h^\tau$ with $\tau \notin [\alpha, \beta)$ have $\mathrm
 \end{proof}
  
 Proposition~\ref{prop:midsize} guarantees the recursion terminates in $O(\log n)$ levels.
- 
-\medskip
-\noindent\textbf{Example (continued).} With $|P| = 8$ and $\varepsilon = 1/2$, the threshold is $8(1/4 - 1/128) \approx 1.94$. Suppose $G_1$ evaluates to roughly:
+\subsubsection{Example (continued)}
+With $|P| = 8$ and $\varepsilon = 1/2$, the threshold is $8(1/4 - 1/128) \approx 1.94$. Suppose $G_1$ evaluates to roughly:
  
 \begin{center}
 \begin{tabular}{lcc}
@@ -661,7 +656,8 @@ Setting $F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)$ and $\Delta = \Delta
 \end{theorem}
  
 \medskip
-\noindent\textbf{Example (continued).} At the top level, $S_2$ is drawn from $P_{\mathrm{rest}} = \{1,2,5,6,7,8\}$ (size 6) and $S_\alpha$ from $P_\alpha = \{3\}$ (size 1). The recursion on $P_{\mathrm{mid}} = \{4\}$ (size 1) trivially probes the single element. With weights assigned proportionally to the set sizes, $\mathrm{w\text{-}err}_Z$ correctly scales the sampled errors back to represent all of $P$.
+\subsubsection{Example (continued)}
+ At the top level, $S_2$ is drawn from $P_{\mathrm{rest}} = \{1,2,5,6,7,8\}$ (size 6) and $S_\alpha$ from $P_\alpha = \{3\}$ (size 1). The recursion on $P_{\mathrm{mid}} = \{4\}$ (size 1) trivially probes the single element. With weights assigned proportionally to the set sizes, $\mathrm{w\text{-}err}_Z$ correctly scales the sampled errors back to represent all of $P$.
  
 % ─────────────────────────────────────────────────────────────
 \subsection{Extension to Higher Dimensions}
@@ -701,7 +697,7 @@ The argument is direct: for any $h\in\Hmon$, the coreset bound gives
 so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\hat{h})\le(1+\varepsilon)\kstar$.
 
 \medskip
-\noindent\textbf{Example (conclusion).} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
+\subsubsection{Example (conclusion)} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
   
 \newpage
 % ============================================================
