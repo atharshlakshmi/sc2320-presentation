@@ -474,23 +474,17 @@ A key limitation of existing active learning approaches is that they require pri
 % ============================================================
  
 \subsection{Why RPE Isn't Enough}
- 
-Recall from Section~2 that RPE achieves an expected error of at most $2\kstar$. This guarantee is tight: no matter how cleverly RPE probes, there exist inputs on which it cannot do better. In the entity matching context, a $2\kstar$ bound means we may accept twice as many mismatches as the best monotone classifier would allow which would be a potentially unacceptable margin for a production ER pipeline. 
 
+Recall that RPE achieves an expected error of at most $2\kstar$, and this guarantee is tight. In the entity-matching context a factor-2 margin may be unacceptable for a production pipeline. 
 
-The goal of this section is to achieve an approximation ratio of $(1+\varepsilon)$, for any user-specified $\varepsilon > 0$. That is, we want to find a function $F : \Hmon \to \R$ with the property:
- 
-\begin{definition}[Relative $\varepsilon$-Comparison Property]
-  A function $F : \Hmon \to \R$ has the \textbf{relative $\varepsilon$-comparison property} if, for any two classifiers $h, h' \in \Hmon$,
-  \[
-    F(h) \le F(h') \implies \mathrm{err}_P(h) \le (1+\varepsilon)\,\mathrm{err}_P(h').
-  \]
-\end{definition}
- 
-Since $F(\hat{h}) \le F(h^*)$ where $h^*$ is any optimal classifier, the comparison property gives $\mathrm{err}_P(\hat{h}) \le (1+\varepsilon)\kstar$, solving Problem~\ref{prob:main}.
- 
+The goal of this section is to achieve an approximation ratio of $(1+\varepsilon)$ for any user-specified $\varepsilon>0$: find a function $F:\Hmon\to\R$ such that
+\[
+  F(h)\le F(h') \;\implies\; \mathrm{err}_P(h)\le(1+\varepsilon)\,\mathrm{err}_P(h').
+\]
+Since $F(\hat h)\le F(h^*)$ for any optimal $h^*$, this gives $\mathrm{err}_P(\hat h)\le(1+\varepsilon)\kstar$.
+
 \begin{remark}[Why estimating $\mathrm{err}_P(h)$ directly fails]
-  A natural attempt is to set $F(h) = \mathrm{err}_P(h)$, computed by probing. But this is fundamentally expensive. Consider $h^{pos}$, the classifier mapping every point to $+1$. Its error is $0$ if all labels are $+1$, or $1$ if exactly one label is $-1$. Estimating $\mathrm{err}_P(h^{pos})$ up to a constant relative factor requires finding that single $-1$ element (or confirming none exists) which demands $\Omega(n)$ probes in expectation, even in $d=1$.
+A natural idea is to set $F(h)=\mathrm{err}_P(h)$ estimated by probing. But even for $h^{pos}$ (the all-$+1$ classifier), estimating its error to within a constant relative factor requires finding the single $-1$ element (or confirming none exists), which demands $\Omega(n)$ probes in expectation.
 \end{remark}
  
 % ─────────────────────────────────────────────────────────────
@@ -521,16 +515,14 @@ We sidestep the $\Omega(n)$ barrier by constructing $F$ satisfying a weaker cond
   where the last step uses $\frac{1+\varepsilon/4}{1-\varepsilon/4} \le 1+\varepsilon$ for all $\varepsilon \in (0,1]$.
 \end{proof}
  
-\begin{remark}[Why $\Delta$ being unknown is fine]
-  If we needed to know $\Delta$, we would have to estimate $\mathrm{err}_P(h)$ for at least one $h$ which costs $\Omega(n)$ probes. The key insight is that $\Delta$ cancels whenever we \emph{compare} two classifiers via $F$. Its existence is all that matters; its value is irrelevant. 
-\end{remark}
+The key insight: $\Delta$ cancels whenever we \emph{compare} two classifiers. We never need to know its value — only its existence.
 
 \medskip
 \noindent\textbf{Running example.} We will trace a small 1D instance through the entire construction. Let $P = \{1, 2, 3, 4, 5, 6, 7, 8\}$ with labels
 \[
   \underbrace{-1, -1, -1, -1}_{\text{points } 1\text{--}4},\; \underbrace{+1, +1, +1, +1}_{\text{points } 5\text{--}8}.
 \]
-Every monotone 1D classifier has the form $h_\tau(p) = +1$ iff $p > \tau$. The optimal classifier is $h_{4.5}$, with $\kstar = 0$. We set $\varepsilon = 1/2$.
+Every monotone 1D classifier has the form $h^\tau(p) = +1$ iff $p > \tau$. The optimal classifier is $h_{4.5}$, with $\kstar = 0$. We set $\varepsilon = 1/2$.
 
 % ─────────────────────────────────────────────────────────────
 \subsection{The Coreset Technique}
@@ -545,7 +537,7 @@ We realise $F$ via a \textbf{relative-comparison coreset}: a weighted subset $Z 
   satisfies \eqref{eq:Fprop} for every $h \in \Hmon$ --- i.e., $\mathrm{w\text{-}err}_Z$ serves as the desired function $F$.
 \end{definition}
  
-By Proposition~\ref{prop:Fimplies}, any such $Z$ is sufficient to find a $(1+\varepsilon)$-approximate classifier. The key novelty of the ``unknown-$\Delta$'' technique is that classical coresets insist on approximating $\mathrm{err}_P(h)$ itself (which costs $\Omega(n)$ probes), while here $\Delta$ is allowed to be unknown.
+The novelty of the unknown-$\Delta$ approach is precisely that classical coresets must approximate $\mathrm{err}_P(h)$ itself (costing $\Omega(n)$ probes), whereas here $\Delta$ absorbs the approximation slack and never need to be computed.
 
 % ─────────────────────────────────────────────────────────────
 \subsection{Building the Coreset in 1D: The Recursive Framework}
@@ -561,9 +553,8 @@ The 1D construction works by solving the following auxiliary problem at every le
   for some (possibly unknown) $\Delta$ with $|\Delta| \le \varepsilon|P|/64$.
 \end{problem}
  
-\subsubsection{Conditions of Problem~\ref{prob:two}:} 
-
-Condition~\eqref{eq:p2abs} says $F(h)$ must be an accurate absolute approximation of $\mathrm{err}_P(h)$. Condition~\eqref{eq:p2rel} is exactly \eqref{eq:Fprop}, giving the relative $\varepsilon$-comparison property via Proposition~\ref{prop:Fimplies}. When $\mathrm{err}_P(h)$ is large (at least $|P|/4$), condition~\eqref{eq:p2abs} alone implies~\eqref{eq:p2rel} with $\Delta = 0$, since the additive tolerance $\varepsilon|P|/64$ is then at most $\frac{\varepsilon}{4}\mathrm{err}_P(h)$. The difficulty and the reason for the unknown $\Delta$ arises when $\mathrm{err}_P(h)$ is small.
+\subsubsection{Conditions of Problem~\ref{prob:two}:}
+Condition~\eqref{eq:p2abs} requires $F(h)$ to be an accurate absolute approximation of $\mathrm{err}_P(h)$. Condition~\eqref{eq:p2rel} coincides with~\eqref{eq:Fprop}, thereby yielding the relative $\varepsilon$-comparison property through Proposition~\ref{prop:Fimplies}. In the regime where $\mathrm{err}_P(h)$ is large (at least $|P|/16$-), condition~\eqref{eq:p2abs} alone is sufficient to imply~\eqref{eq:p2rel} with $\Delta = 0$, because the additive tolerance $\varepsilon|P|/64$ is in that case no greater than $\frac{\varepsilon}{4}\mathrm{err}_P(h)$. The real challenge, and the reason for the unknown quantity $\Delta$, emerges when $\mathrm{err}_P(h)$ is small.
  
 
 \subsubsection{Estimating Error via Sampling (Functions $G_1$, $G_2$, $F_\alpha$)}
@@ -574,11 +565,18 @@ At each recursion level on a set $Q \subseteq P$, we draw a uniform sample $S$ o
 \]
 By a standard concentration bound, $G$ satisfies condition~\eqref{eq:p2abs} for $Q$ simultaneously for all $h \in \Hmon$, with high probability. Three such estimates are used per level:
 \begin{itemize}
-  \item $G_1$, sampled from the full $P$, is used to \emph{locate the split point} (see below) --- it does not enter the coreset directly.
+  \item $G_1$, sampled from the full $P$, is used to \emph{locate the split point}. It does not enter the coreset directly.
   \item $G_2$, sampled from $P_{\mathrm{rest}}$, approximates $\mathrm{err}_{P_{\mathrm{rest}}}(h)$ and contributes its sampled points to $Z$.
   \item $F_\alpha$, sampled from $P_\alpha$, approximates $\mathrm{err}_{P_\alpha}(h)$ and contributes its sampled points to $Z$.
 \end{itemize}
-Together, the target function for Problem 2, $F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)$ (where $F_{\mathrm{mid}}$ comes from recursion on $P_{\mathrm{mid}}$) satisfies both conditions of Problem~\ref{prob:two} for the full $P$.
+Together, the target function for Problem~\ref{prob:two}, 
+\[
+F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h) 
+\]
+
+where $F_{\mathrm{mid}}$ comes from recursion on $P_{\mathrm{mid}}$ satisfies both conditions of Problem~\ref{prob:two} for the full $P$.
+
+As there are $\ell$ levels, the overall cost is $O\!\left(\frac{\ell}{\epsilon^2} \log \frac{n}{\delta}\right) = O\!\left(\frac{\log n}{\epsilon^2} \cdot \log \frac{n}{\delta}\right)$, which lets us sovle Problem~\ref{prob:two} with a probability of at least $1 - \delta$.
  
 \medskip
 \noindent\textbf{Example (continued).} 
@@ -594,15 +592,15 @@ Together, the target function for Problem 2, $F(h) = G_2(h) + F_\alpha(h) + F_{\
  
 The purpose of $G_1$ --- satisfying condition~\eqref{eq:p2abs} for the full $P$ --- is to identify where the error function transitions through the value $|P|/4$. Concretely, define:
 \begin{align*}
-  \alpha &= \text{smallest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h_\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right),\\
-  \beta &= \text{largest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h_\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right).
+  \alpha &= \text{smallest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h^\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right),\\
+  \beta &= \text{largest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h^\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right).
 \end{align*}
-Because $G_1$ satisfies~\eqref{eq:p2abs}, any $h_\tau$ with $G_1(h_\tau)$ below this threshold has $\mathrm{err}_P(h_\tau) < |P|/4$. This splits $P$ into:
+Because $G_1$ satisfies~\eqref{eq:p2abs}, any $h^\tau$ with $G_1(h^\tau)$ below this threshold has $\mathrm{err}_P(h^\tau) < |P|/4$. This splits $P$ into:
 \[
   P_\alpha = \{p \in P : p = \alpha\}, \quad P_{\mathrm{mid}} = \{p \in P : \alpha < p \le \beta\}, \quad P_{\mathrm{rest}} = P \setminus (P_\alpha \cup P_{\mathrm{mid}}).
 \]
  
-Crucially, classifiers $h_\tau$ with $\tau \notin [\alpha, \beta)$ have $\mathrm{err}_P(h_\tau) \ge |P|/4$, so condition~\eqref{eq:p2rel} for those classifiers follows from~\eqref{eq:p2abs} alone (with $\Delta = 0$). The recursive step only needs to handle $\tau \in [\alpha, \beta)$, where errors are small and the unknown $\Delta$ is needed.
+Crucially, classifiers $h^\tau$ with $\tau \notin [\alpha, \beta)$ have $\mathrm{err}_P(h^\tau) \ge |P|/4$, so condition~\eqref{eq:p2rel} for those classifiers follows from~\eqref{eq:p2abs} alone (with $\Delta = 0$). The recursive step only needs to handle $\tau \in [\alpha, \beta)$, where errors are small and the unknown $\Delta$ is needed.
  
 \begin{proposition}[Size of $P_{\mathrm{mid}}$]\label{prop:midsize}
   $|P_{\mathrm{mid}}| < |P|/2$.
@@ -620,7 +618,7 @@ Proposition~\ref{prop:midsize} guarantees the recursion terminates in $O(\log n)
 \begin{center}
 \begin{tabular}{lcc}
   \toprule
-  Classifier $h_\tau$ & True $\mathrm{err}_P(h_\tau)$ & $G_1(h_\tau)$ (approx.) \\
+  Classifier $h^\tau$ & True $\mathrm{err}_P(h^\tau)$ & $G_1(h^\tau)$ (approx.) \\
   \midrule
   $h_{-\infty}$ (all $+1$) & 4 & 4.0 \\
   $h_{1}$ & 3 & 3.2 \\
@@ -668,39 +666,42 @@ Setting $F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)$ and $\Delta = \Delta
 % ─────────────────────────────────────────────────────────────
 \subsection{Extension to Higher Dimensions}
  
-For $d > 1$, the algorithm first computes a \textbf{chain decomposition} $C_1, \ldots, C_w$ of $P$ using Dilworth's Theorem --- the same decomposition used in the cost analysis of RPE (Section~2). Since each chain $C_i$ is totally ordered, it can be treated as a 1D instance.
+For $d > 1$, the algorithm first computes a \textbf{chain decomposition} $C_1, \ldots, C_w$ of $P$ using Dilworth's Theorem --- the same decomposition used in the cost analysis of RPE (Section~2). Since each chain $C_i$ is ordered, it can be treated as a 1D instance.
  
-Applying the 1D coreset construction to each $C_i$ independently (with failure probability $\delta/w$) yields sub-coresets $Z_1, \ldots, Z_w$. The final coreset is $Z = \bigcup_{i=1}^{w} Z_i$.
- 
-For every $h \in \Hmon$:
+Applying the 1D coreset construction to each $C_i$ independently yields sub-coresets $Z_1, \ldots, Z_w$. The final coreset is $Z = \bigcup_{i=1}^{w} Z_i$. For every $h \in \Hmon$:
 \[
   \mathrm{err}_P(h) = \sum_{i=1}^{w} \mathrm{err}_{C_i}(h), \qquad \mathrm{w\text{-}err}_Z(h) = \sum_{i=1}^{w} \mathrm{w\text{-}err}_{Z_i}(h).
 \]
 Since each $Z_i$ satisfies a per-chain relative bound with unknown shift $\Delta_i$, summing gives the global bound with $\Delta = \sum_i \Delta_i$.
  
 % ─────────────────────────────────────────────────────────────
-\subsection{Achieving the $(1{+}\varepsilon)$ Guarantee}
- 
-Given the coreset $Z$, finding the best monotone classifier is now a purely computational task that requires \emph{no further probing}:
- 
+\subsection{Achieving the $(1+\varepsilon)$ Guarantee}
+
+Given the coreset $Z$, finding the best monotone classifier requires \emph{no further probing}: simply compute
+\[
+  \hat{h} = \arg\min_{h\in\Hmon}\mathrm{w\text{-}err}_Z(h),
+\]
+which can be done in time polynomial in $|Z|$ and $d$.
+
 \begin{corollary}[Corollary 7 in the paper]\label{cor:main}
-  For Problem~1 with any $\varepsilon \in (0,1]$, there exists an algorithm that finds, with high probability, a monotone classifier with error at most $(1+\varepsilon)\kstar$ by probing
+  For Problem~1 with any $\varepsilon\in(0,1]$, there exists an algorithm that finds, with high probability, a monotone classifier with error at most $(1+\varepsilon)\kstar$ using
   \[
-    O\!\left(\frac{w}{\varepsilon^2}\,\log\!\frac{n}{w}\cdot\log n\right)
+    O\!\left(\frac{w}{\varepsilon^2}\log\!\frac{n}{w}\cdot\log n\right)
   \]
-  elements, where $n$ is the size of $P$, $w$ is its width, and $\kstar$ is the optimal monotone error.
+  probes, where $n=|P|$, $w$ is the width of $P$, and $\kstar$ is the optimal monotone error.
 \end{corollary}
- 
-\begin{proof}[Proof sketch]
-  By Theorem~\ref{thm:coreset}, we obtain a coreset $Z$ in the stated probe budget. Let $h^* = \arg\min_{h \in \Hmon} \mathrm{w\text{-}err}_Z(h)$ be the minimizer over $Z$ (computable in time polynomial in $|Z|$ and $d$). For any $h \in \Hmon$:
-  \begin{align*}
-    \mathrm{err}_P(h^*)\!\left(1 - \tfrac{\varepsilon}{4}\right) &\le \mathrm{w\text{-}err}_Z(h^*) - \Delta \le \mathrm{w\text{-}err}_Z(h) - \Delta \le \mathrm{err}_P(h)\!\left(1 + \tfrac{\varepsilon}{4}\right).
-  \end{align*}
-  Setting $h$ to the true optimal classifier and rearranging gives $\mathrm{err}_P(h^*) \le (1+\varepsilon)\kstar$ (up to small lower-order terms absorbed into the $\varepsilon$ factor).
-\end{proof}
- 
+
+The argument is direct: for any $h\in\Hmon$, the coreset bound gives
+\[
+  \mathrm{err}_P(\hat{h})\!\left(1-\tfrac\varepsilon4\right)
+  \le \mathrm{w\text{-}err}_Z(\hat{h})-\Delta
+  \le \mathrm{w\text{-}err}_Z(h^*)-\Delta
+  \le \mathrm{err}_P(h^*)\!\left(1+\tfrac\varepsilon4\right),
+\]
+so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\hat{h})\le(1+\varepsilon)\kstar$.
+
 \medskip
-\noindent\textbf{Example (conclusion).} Given our coreset $Z$, we compute $\mathrm{w\text{-}err}_Z(h_\tau)$ for each candidate threshold $\tau$. The minimizer turns out to be $h_{4.5}$ (or equivalently $h_4$), achieving weighted error $\approx 0$. Since $\kstar = 0$, the $(1+\varepsilon)\kstar = 0$ bound is met exactly.
+\noindent\textbf{Example (conclusion).} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
   
 \newpage
 % ============================================================
