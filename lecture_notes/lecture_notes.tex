@@ -19,6 +19,8 @@
 \usepackage{enumitem}
 \usepackage{thmtools}
 \usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 \usepackage{booktabs}          % nice tables
 
 % ---------- colours (simple, soft palette) ----------
@@ -696,6 +698,38 @@ so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\ha
 \medskip
 \subsubsection{Example (conclusion)} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
   
+\section{Full Algorithmic Description}
+\begin{algorithm}
+\caption{BuildCoreset($P$)}
+\begin{algorithmic}[1]
+\STATE $Z \gets \emptyset$
+\IF{$|P| = 1$}
+    \STATE Probe the (only) element $p \in P$
+    \STATE $Z \gets \{p\}$ with $\text{weight}(p) = 1$
+\ELSE
+    \STATE Probe sample $S_1$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P$
+    \STATE \COMMENT{Defines $G_1(h) = (|P|/|S_1|)\cdot \mathrm{err}_{S_1}(h)$; use $G_1$ to find $\alpha, \beta$ and split $P$ into $P_\alpha, P_{\text{mid}}, P_{\text{rest}}$}
+
+    \IF{$P_{\text{rest}} \neq \emptyset$}
+        \STATE Probe sample $S_2$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P_{\text{rest}}$
+        \STATE \COMMENT{Defines $G_2(h) = (|P_{\text{rest}}|/|S_2|)\cdot \mathrm{err}_{S_2}(h)$}
+        \STATE Add $S_2$ to $Z$ with $\text{weight}(p) = |P_{\text{rest}}|/|S_2|$ for each $p \in S_2$
+    \ENDIF
+
+    \IF{$P_\alpha \neq \emptyset$}
+        \STATE Probe sample $S_\alpha$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P_\alpha$
+        \STATE \COMMENT{Defines $F_\alpha(h) = (|P_\alpha|/|S_\alpha|)\cdot \mathrm{err}_{S_\alpha}(h)$}
+        \STATE Add $S_\alpha$ to $Z$ with $\text{weight}(p) = |P_\alpha|/|S_\alpha|$ for each $p \in S_\alpha$
+    \ENDIF
+
+    \STATE $Z_{\text{mid}} \gets \textsc{BuildCoreset}(P_{\text{mid}})$
+    \STATE Add $Z_{\text{mid}}$ to $Z$
+\ENDIF
+
+\STATE \textbf{return} $Z$
+\end{algorithmic}
+\end{algorithm}
+
 \newpage
 % ============================================================
 \section{Proofs and Lower Bounds}
