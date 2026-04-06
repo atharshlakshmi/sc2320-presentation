@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide 3 — Hard Input Family (Theorem 10 Proof)</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .proof-flow {
+    display: flex; flex-direction: column; gap: 16px; margin-top: 16px;
+  }
+  .proof-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: var(--surface); border-radius: 10px; padding: 18px 24px;
+    border: 1px solid var(--border); opacity: 0; transform: translateX(-20px);
+    animation: slideRight 0.5s ease forwards;
+  }
+  .proof-step:nth-child(1) { animation-delay: 0.4s; }
+  .proof-step:nth-child(2) { animation-delay: 0.7s; }
+  .proof-step:nth-child(3) { animation-delay: 1.0s; }
+  .proof-step:nth-child(4) { animation-delay: 1.3s; }
+  .step-num {
+    min-width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: var(--bg); display: flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+  }
+  .step-content { flex: 1; }
+  .step-content p { font-size: 16px; }
+  .arrow-down {
+    text-align: center; color: var(--accent); font-size: 24px;
+    opacity: 0; animation: fadeIn 0.3s ease forwards;
+  }
+  .arrow-down:nth-of-type(1) { animation-delay: 0.6s; }
+  .arrow-down:nth-of-type(2) { animation-delay: 0.9s; }
+  .arrow-down:nth-of-type(3) { animation-delay: 1.2s; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <h2 class="fade-in">Proof of &Omega;(n): From Deterministic to Randomized</h2>
+  <p class="subtitle fade-in fade-in-delay-1">Reducing the problem through counting and Yao's minimax</p>
+
+  <div class="proof-flow">
+    <div class="proof-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <p><span class="highlight">Proposition 5:</span> No monotone classifier is optimal for <em>both</em> P<sub>&minus;1</sub>(i) and P<sub>+1</sub>(i).</p>
+        <p style="color:var(--text-dim); font-size:14px; margin-top:4px;">An optimal classifier must know if the anomaly pair is (&minus;1) or (+1) &mdash; so the algorithm must find and identify it.</p>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="proof-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <p><span class="highlight">Free labels boost:</span> Strengthen the algorithm &mdash; probing one element in a pair reveals both labels for free.</p>
+        <p style="color:var(--text-dim); font-size:14px; margin-top:4px;">If the lower bound holds even with this advantage, it holds without it too.</p>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="proof-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <p><span class="highlight">Deterministic counting (Lemma 11):</span> A<sub>det</sub> probes pairs x<sub>1</sub>, x<sub>2</sub>, ..., x<sub>t</sub> in sequence, stops when anomaly found.</p>
+        <p style="color:var(--text-dim); font-size:14px; margin-top:4px;">If A<sub>det</sub> errs on &le; cn/2 inputs, it probes &ge; n(1&minus;c)/2 pairs, giving <span class="highlight-red">family-cost &ge; n&sup2;(1&minus;c&sup2;)/4</span>.</p>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="proof-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <p><span class="highlight">Yao's minimax &rarr; Corollary 12:</span> Any <em>randomized</em> algorithm with family-err &lt; n/3 has E[family-cost] = &Omega;(n&sup2;).</p>
+        <p style="color:var(--text-dim); font-size:14px; margin-top:4px;">Since there are n inputs, at least one input requires <span class="highlight-red">&Omega;(n)</span> expected probes.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="slide2.html">&larr; Prev</a>
+  <a href="index.html">Index</a>
+  <a href="slide4.html">Next &rarr;</a>
+</div>
+<div class="slide-number">3 / 8</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide 6 — The &Omega;(w/&epsilon;&sup2;) Lower Bound</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .location-grid {
+    display: flex; gap: 12px; justify-content: center; margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .loc-col {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 12px 10px; border-radius: 10px; background: var(--surface);
+    border: 1px solid var(--border); min-width: 70px;
+    opacity: 0; animation: scaleIn 0.4s ease forwards;
+  }
+  .loc-col:nth-child(1) { animation-delay: 0.8s; }
+  .loc-col:nth-child(2) { animation-delay: 0.9s; }
+  .loc-col:nth-child(3) { animation-delay: 1.0s; }
+  .loc-col:nth-child(4) { animation-delay: 1.1s; }
+  .loc-col:nth-child(5) { animation-delay: 1.2s; }
+  .loc-col:nth-child(6) { animation-delay: 1.3s; }
+  .loc-col:nth-child(7) { animation-delay: 1.4s; }
+  .loc-dots {
+    display: flex; flex-direction: column; gap: 2px; align-items: center;
+  }
+  .loc-dot {
+    width: 8px; height: 8px; border-radius: 50%; transition: background 0.3s;
+  }
+  .loc-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .mu-label {
+    font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .mu1 { background: rgba(248,113,113,0.15); color: var(--red); }
+  .mu2 { background: rgba(108,140,255,0.15); color: var(--accent); }
+  .insight-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 24px; margin: 8px 0;
+    border-left: 3px solid var(--orange);
+  }
+</style>
+</head>
+<body>
+<div class="slide" style="padding-top: 36px; padding-bottom: 36px;">
+  <h2 class="fade-in">Lower Bound for Arbitrary &epsilon;</h2>
+  <p class="subtitle fade-in fade-in-delay-1">Theorem 14 &mdash; Any algorithm needs &Omega;(w/&epsilon;&sup2;) probes</p>
+
+  <div class="lower-bound-box fade-in fade-in-delay-2">
+    <div class="label">Theorem 14</div>
+    <p>For 0 &lt; &epsilon; &le; 1/10, any algorithm guaranteeing expected error (1+&epsilon;)k* must probe <span class="highlight-red">&Omega;(w/&epsilon;&sup2;)</span> elements in expectation on some input of width w. Holds even in d = 2.</p>
+  </div>
+
+  <div class="fade-in fade-in-delay-3">
+    <h3 style="font-size: 18px;">Hard Input Construction</h3>
+    <p style="font-size: 15px; margin-bottom: 6px;">Place n/w points at each of w locations x<sub>1</sub>,...,x<sub>w</sub> (no dominance between locations). Each location gets a <span class="highlight">random bias</span>:</p>
+  </div>
+
+  <div class="location-grid">
+    <div class="loc-col">
+      <div class="mu-label mu1">&mu;<sub>1</sub></div>
+      <div class="loc-dots">
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+      </div>
+      <div class="loc-label">x<sub>1</sub></div>
+    </div>
+    <div class="loc-col">
+      <div class="mu-label mu2">&mu;<sub>2</sub></div>
+      <div class="loc-dots">
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+      </div>
+      <div class="loc-label">x<sub>2</sub></div>
+    </div>
+    <div class="loc-col">
+      <div class="mu-label mu1">&mu;<sub>1</sub></div>
+      <div class="loc-dots">
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+      </div>
+      <div class="loc-label">x<sub>3</sub></div>
+    </div>
+    <div class="loc-col" style="font-size: 20px; color: var(--text-dim); align-self: center;">...</div>
+    <div class="loc-col">
+      <div class="mu-label mu2">&mu;<sub>2</sub></div>
+      <div class="loc-dots">
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--red);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+        <div class="loc-dot" style="background:var(--accent);"></div>
+      </div>
+      <div class="loc-label">x<sub>w</sub></div>
+    </div>
+  </div>
+
+  <div class="two-col fade-in fade-in-delay-5">
+    <div class="insight-box">
+      <p style="font-size: 15px;"><span class="highlight-orange">&mu;<sub>1</sub> = (1&minus;&gamma;)/2</span> &nbsp; slightly below 1/2</p>
+      <p style="font-size: 15px;"><span class="highlight">&mu;<sub>2</sub> = (1+&gamma;)/2</span> &nbsp; slightly above 1/2</p>
+      <p style="font-size: 14px; color: var(--text-dim); margin-top: 8px;">where &gamma; = 9&epsilon;. Each label is +1 with probability &mu;[i], independently.</p>
+    </div>
+    <div class="insight-box">
+      <p style="font-size: 15px;"><span class="highlight-red">Core difficulty:</span> Distinguishing &mu;<sub>1</sub> from &mu;<sub>2</sub> at each location requires <span class="highlight">M = &Theta;(1/&epsilon;&sup2;)</span> samples (by Le Cam / Anthony-Bartlett).</p>
+      <p style="font-size: 14px; color: var(--text-dim); margin-top: 8px;">With w locations and budget &lt; wM/8, more than half remain "unresolved".</p>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="slide5.html">&larr; Prev</a>
+  <a href="index.html">Index</a>
+  <a href="slide7.html">Next &rarr;</a>
+</div>
+<div class="slide-number">6 / 8</div>
+</body>
+</html>

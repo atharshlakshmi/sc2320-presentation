@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide 8 — Near-Optimality: Matching Bounds</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .summary-table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin: 20px 0;
+    opacity: 0; animation: scaleIn 0.6s ease forwards; animation-delay: 0.5s;
+  }
+  .summary-table-wrap table { margin: 0; }
+  .summary-table-wrap th {
+    background: var(--surface2); padding: 14px 18px; font-size: 13px;
+  }
+  .summary-table-wrap td { padding: 14px 18px; font-size: 15px; }
+  .match-row td { background: rgba(52,211,153,0.04); }
+  .gap-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 12px; font-weight: 700;
+  }
+  .gap-tight { background: rgba(52,211,153,0.15); color: var(--accent3); }
+  .gap-log { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .gap-exact { background: rgba(108,140,255,0.15); color: var(--accent); }
+  .takeaway-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px;
+  }
+  .takeaway-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px;
+    opacity: 0; transform: translateY(15px);
+    animation: fadeIn 0.5s ease forwards;
+  }
+  .takeaway-card:nth-child(1) { animation-delay: 1.0s; }
+  .takeaway-card:nth-child(2) { animation-delay: 1.2s; }
+  .takeaway-card:nth-child(3) { animation-delay: 1.4s; }
+  .takeaway-card:nth-child(4) { animation-delay: 1.6s; }
+  .takeaway-card h3 { font-size: 16px; margin-bottom: 8px; }
+  .takeaway-card p { font-size: 14px; line-height: 1.6; }
+  .final-box {
+    text-align: center; margin-top: 24px; padding: 20px;
+    border-radius: 14px; border: 2px solid var(--accent3);
+    background: rgba(52,211,153,0.04);
+    opacity: 0; animation: scaleIn 0.6s ease forwards; animation-delay: 2.0s;
+  }
+</style>
+</head>
+<body>
+<div class="slide" style="padding-top: 36px; padding-bottom: 36px;">
+  <h2 class="fade-in">Near-Optimality: The Full Picture</h2>
+  <p class="subtitle fade-in fade-in-delay-1">Upper and lower bounds nearly match across all regimes of &epsilon;</p>
+
+  <div class="summary-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>&epsilon;</th>
+          <th>Upper Bound (Cost)</th>
+          <th>Lower Bound (Cost)</th>
+          <th>Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="highlight-red">&epsilon; = 0</span></td>
+          <td>O(n) &mdash; probe everything</td>
+          <td>&Omega;(n) &ensp; <span style="font-size:12px; color:var(--text-dim);">[Thm 10]</span></td>
+          <td><span class="gap-badge gap-tight">Tight</span></td>
+        </tr>
+        <tr class="match-row">
+          <td><span class="highlight-orange">constant c &gt; 1</span></td>
+          <td>O(w &middot; Log(n/w)) &ensp; <span style="font-size:12px; color:var(--text-dim);">[RPE, Thm 1]</span></td>
+          <td>&Omega;(w &middot; Log(n/(k*+1)w)) &ensp; <span style="font-size:12px; color:var(--text-dim);">[Thm 13]</span></td>
+          <td><span class="gap-badge gap-tight">Tight*</span></td>
+        </tr>
+        <tr>
+          <td><span class="highlight">any &epsilon; &gt; 0</span></td>
+          <td>O(w/&epsilon;&sup2; &middot; Log(n/w) &middot; log n) &ensp; <span style="font-size:12px; color:var(--text-dim);">[Thm 6]</span></td>
+          <td>&Omega;(w/&epsilon;&sup2;) &ensp; <span style="font-size:12px; color:var(--text-dim);">[Thm 14]</span></td>
+          <td><span class="gap-badge gap-log">O(Log &middot; log)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="fade-in" style="font-size:13px; color:var(--text-dim); animation-delay: 0.8s;">* Tight when k* &le; (n/w)<sup>1&minus;&delta;</sup> for any small constant &delta; &gt; 0.</p>
+
+  <div class="takeaway-grid">
+    <div class="takeaway-card" style="border-left: 3px solid var(--red);">
+      <h3 style="color: var(--red);">&epsilon; = 0 is Hopeless</h3>
+      <p>Finding the exact optimum requires reading essentially the entire input. No clever algorithm can avoid &Omega;(n) probes, even in 1D.</p>
+    </div>
+    <div class="takeaway-card" style="border-left: 3px solid var(--orange);">
+      <h3 style="color: var(--orange);">Width w is the Right Parameter</h3>
+      <p>Both upper and lower bounds scale with w, confirming that the <em>dominance width</em> captures the intrinsic difficulty of monotone classification.</p>
+    </div>
+    <div class="takeaway-card" style="border-left: 3px solid var(--accent);">
+      <h3 style="color: var(--accent);">1/&epsilon;&sup2; Dependence is Necessary</h3>
+      <p>The &Omega;(w/&epsilon;&sup2;) lower bound shows the quadratic dependence on 1/&epsilon; is unavoidable &mdash; not an artifact of the algorithm design.</p>
+    </div>
+    <div class="takeaway-card" style="border-left: 3px solid var(--accent3);">
+      <h3 style="color: var(--accent3);">Only Polylog Gap Remains</h3>
+      <p>The remaining gap is O(Log(n/w) &middot; log n). Closing this gap &mdash; in either direction &mdash; is an open problem.</p>
+    </div>
+  </div>
+
+  <div class="final-box">
+    <p style="font-size: 20px; font-weight: 600; color: var(--accent3);">The "true" complexity of Problem 1 is &Theta;(w/&epsilon;&sup2;) up to polylogarithmic factors.</p>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="slide7.html">&larr; Prev</a>
+  <a href="index.html">Index</a>
+</div>
+<div class="slide-number">8 / 8</div>
+</body>
+</html>
