@@ -36,8 +36,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 700; flex-shrink: 0;
   }
-  .rp1 .rp-num { background: var(--accent); color: var(--bg); }
-  .rp2 .rp-num { background: var(--accent2); color: var(--bg); }
+  .rp1 .rp-num { background: var(--accent); color: #ffffff; }
+  .rp2 .rp-num { background: var(--accent2); color: #ffffff; }
   .lemma-chain {
     display: flex; flex-direction: column; gap: 10px; margin-top: 16px;
   }
@@ -52,6 +52,7 @@
   .lemma-item:nth-child(2) { animation-delay: 1.9s; }
   .lemma-item:nth-child(3) { animation-delay: 2.2s; }
   .lemma-item:nth-child(4) { animation-delay: 2.5s; }
+
   .lemma-tag {
     padding: 3px 10px; border-radius: 6px; font-size: 12px;
     font-weight: 700; white-space: nowrap; flex-shrink: 0;
@@ -89,19 +90,19 @@
 
   <div class="lemma-chain">
     <div class="lemma-item">
-      <div class="lemma-tag" style="background:rgba(251,191,36,0.15); color:var(--yellow);">Lemma 17</div>
+      <div class="lemma-tag" style="background:rgba(230,119,0,0.12); color:var(--yellow);">Lemma 17</div>
       <p style="font-size: 14px;">Distinguishing &mu;<sub>1</sub> from &mu;<sub>2</sub> with &gt; 2/3 probability needs M = &Theta;(1/&gamma;&sup2;) = &Theta;(1/&epsilon;&sup2;) samples</p>
     </div>
     <div class="lemma-item">
-      <div class="lemma-tag" style="background:rgba(108,140,255,0.15); color:var(--accent);">Lemma 18</div>
+      <div class="lemma-tag" style="background:rgba(59,91,219,0.12); color:var(--accent);">Lemma 18</div>
       <p style="font-size: 14px;">With budget wM/8, more than <span class="highlight">w/2 locations are "light"</span> (probed fewer than M times)</p>
     </div>
     <div class="lemma-item">
-      <div class="lemma-tag" style="background:rgba(167,139,250,0.15); color:var(--accent2);">Lemma 19</div>
+      <div class="lemma-tag" style="background:rgba(112,72,232,0.12); color:var(--accent2);">Lemma 19</div>
       <p style="font-size: 14px;">At each light location, the algorithm guesses &mu;[i] wrong with probability &gt; <span class="highlight-red">1/4</span></p>
     </div>
     <div class="lemma-item">
-      <div class="lemma-tag" style="background:rgba(52,211,153,0.15); color:var(--accent3);">Conclusion</div>
+      <div class="lemma-tag" style="background:rgba(12,166,120,0.12); color:var(--accent3);">Conclusion</div>
       <p style="font-size: 14px;">Each wrong guess at x<sub>i</sub> adds &ge; n&gamma;/(2w) excess error &rArr; E[R<sub>2</sub>] &ge; 1 + (153/144)&epsilon; &gt; <span class="highlight-red">1 + &epsilon;</span></p>
     </div>
   </div>

@@ -990,17 +990,451 @@ so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\ha
 \section{Proofs and Lower Bounds}
 % ============================================================
 
-\subsection{Lower Bound Results}
-% State Theorems 10, 13, 14: \Omega(n) for \varepsilon=0;
-% lower bounds for constant and arbitrary approximation ratios.
+Having established algorithms for monotone classification (RPE achieving $2\kstar$ in Section~2 and the coreset-based algorithm achieving $(1+\varepsilon)\kstar$ in Section~3), the natural question is: \emph{can we do better?} This section answers that question by proving \textbf{lower bounds} --- results showing that \emph{no algorithm} can substantially outperform the ones we have. Together with the upper bounds, these lower bounds establish that our algorithms are \textbf{near-optimal}.
 
-\subsection{Near-Optimality of the Algorithms}
-% Argue that the upper bounds from RPE and RCC match the lower bounds
-% up to logarithmic factors, establishing near-optimality.
+We proceed in three stages, mirroring the three regimes of $\varepsilon$:
+\begin{enumerate}
+  \item \textbf{Exact case} ($\varepsilon = 0$): finding an optimal classifier requires $\Omega(n)$ probes (Theorem~\ref{thm:lb-exact}).
+  \item \textbf{Constant approximation} ($\varepsilon$ is a constant): any $c$-approximate algorithm requires $\Omega(w \cdot \mathrm{Log}\,\frac{n}{(k^*+1)w})$ probes (Theorem~\ref{thm:lb-constant}).
+  \item \textbf{Arbitrary $\varepsilon$}: any $(1+\varepsilon)$-approximate algorithm requires $\Omega(w/\varepsilon^2)$ probes (Theorem~\ref{thm:lb-arbitrary}).
+\end{enumerate}
 
-\subsection{Mathematical Machinery}
-% Key tools used in proofs: concentration bounds, VC-dimension,
-% disagreement coefficient, and the attrition-and-elimination game.
+% ─────────────────────────────────────────────────────────────
+\subsection{The Exact Case: $\varepsilon = 0$ Requires $\Omega(n)$ Probes}
+
+When $\varepsilon = 0$, the algorithm must find an \emph{optimal} monotone classifier --- one that achieves exactly $\kstar$ errors. The following theorem shows this is essentially as hard as reading the entire input.
+
+\begin{theorem}[Theorem 10 in the paper]\label{thm:lb-exact}
+  For Problem~\ref{prob:main}, any algorithm that finds an optimal monotone classifier with probability greater than $2/3$ must probe $\Omega(n)$ elements in expectation. This holds even when:
+  \begin{itemize}
+    \item the dimensionality $d = 1$, and
+    \item the algorithm knows $\kstar$ in advance.
+  \end{itemize}
+\end{theorem}
+
+\begin{remark}[Significance]
+This result justifies the entire study of the approximate case ($\varepsilon > 0$). If finding the exact optimum were cheap, there would be no need for approximation. The $\Omega(n)$ lower bound shows that \emph{even with strong prior knowledge} (knowing $\kstar$), no clever probing strategy can avoid reading nearly all of $P$.
+\end{remark}
+
+\subsubsection{The Hard Input Family}
+
+The proof constructs a family $\mathcal{P}$ of $n$ one-dimensional inputs that any algorithm must distinguish between. All inputs share the same point locations $\{1, 2, \ldots, n\}$ and differ only in their label assignments.
+
+\medskip
+\noindent\textbf{Construction.} Group the $n$ elements into $n/2$ \emph{pairs}: $(1,2), (3,4), \ldots, (n-1, n)$. In a \emph{normal pair} $(2i-1, 2i)$, element $2i-1$ has label $+1$ and element $2i$ has label $-1$. Each input in $\mathcal{P}$ contains exactly one \emph{anomaly pair} where the normal labelling is violated:
+
+\begin{itemize}
+  \item \textbf{$(-1)$-input $P_{-1}(i)$}: The anomaly pair is $(2i-1, 2i)$ where \emph{both} elements receive label $-1$. That is, element $2i-1$ is flipped from $+1$ to $-1$.
+  \item \textbf{$(+1)$-input $P_{+1}(i)$}: The anomaly pair is $(2i-1, 2i)$ where \emph{both} elements receive label $+1$. That is, element $2i$ is flipped from $-1$ to $+1$.
+\end{itemize}
+
+This gives $n/2$ choices for the anomaly pair and $2$ choices for its type, yielding $|\mathcal{P}| = n$ total inputs.
+
+\begin{example}
+  For $n = 6$, the elements are $\{1,2,3,4,5,6\}$ grouped into pairs $(1,2), (3,4), (5,6)$. In a normal pair, labels are $(+1, -1)$. Some inputs in $\mathcal{P}$:
+  \begin{center}
+  \begin{tabular}{lccccccl}
+    \toprule
+    Input & 1 & 2 & 3 & 4 & 5 & 6 & Anomaly \\
+    \midrule
+    $P_{-1}(1)$ & $\mathbf{-1}$ & $-1$ & $+1$ & $-1$ & $+1$ & $-1$ & pair 1 flipped to $(-1,-1)$ \\
+    $P_{+1}(2)$ & $+1$ & $-1$ & $+1$ & $\mathbf{+1}$ & $+1$ & $-1$ & pair 2 flipped to $(+1,+1)$ \\
+    $P_{-1}(3)$ & $+1$ & $-1$ & $+1$ & $-1$ & $\mathbf{-1}$ & $-1$ & pair 3 flipped to $(-1,-1)$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  Bold entries mark the flipped element that creates the anomaly.
+\end{example}
+
+\subsubsection{Key Properties of the Family}
+
+\begin{proposition}[Proposition 5 in the paper]\label{prop:no-shared-opt}
+  For any $i \in [n/2]$, no monotone classifier can be optimal for \emph{both} $P_{-1}(i)$ and $P_{+1}(i)$.
+\end{proposition}
+
+\begin{proof}
+  Every input in $\mathcal{P}$ has optimal monotone error $\kstar = n/2 - 1$. Every 1D monotone classifier has the form $h^\tau$ (mapping points $> \tau$ to $+1$). Consider the three cases for a classifier $h^\tau$:
+  \begin{itemize}
+    \item $\tau < 2i - 1$: On $P_{-1}(i)$, both elements $2i-1$ and $2i$ are labelled $-1$ but $h^\tau$ maps them to $+1$, giving error $n/2 + 1 > \kstar$.
+    \item $\tau = 2i - 1$: On $P_{-1}(i)$, element $2i$ is labelled $-1$ but mapped to $+1$, giving error $n/2 > \kstar$.
+    \item $\tau \geq 2i$: On $P_{+1}(i)$, both elements $2i-1$ and $2i$ are labelled $+1$ but $h^\tau$ maps them to $-1$, giving error $n/2 + 1 > \kstar$.
+  \end{itemize}
+  In every case, $h^\tau$ is suboptimal on at least one of $P_{-1}(i)$ or $P_{+1}(i)$.
+\end{proof}
+
+\begin{remark}[Intuition]
+  The anomaly pair determines whether the optimal classifier should ``cut'' to the left or right of that pair. Without identifying which pair is anomalous \emph{and} what type it is, the algorithm cannot determine the correct cut point.
+\end{remark}
+
+\subsubsection{The Counting Argument (Lemma 11)}
+
+To prove the lower bound, the paper first analyzes \emph{deterministic} algorithms, then extends to randomized ones via Yao's minimax theorem.
+
+\medskip
+\noindent\textbf{Free labels boost.} To make the lower bound stronger, we \emph{help} the algorithm: whenever it probes one element of a pair $(2i-1, 2i)$, we reveal the label of the other element for free. If the lower bound holds even with this advantage, it must hold without it. We say the algorithm ``probes pair $i$'' when it probes either $2i-1$ or $2i$.
+
+\medskip
+A deterministic algorithm $A_\mathrm{det}$ (with free labels) probes pairs in a fixed sequence $x_1, x_2, \ldots, x_t$. It stops when it discovers the anomaly pair (since all normal pairs look identical). If it reaches the end of the sequence without finding the anomaly, it outputs a fixed classifier $h_\mathrm{det}$.
+
+\begin{lemma}[Lemma 11 in the paper]\label{lem:det-cost}
+  Fix any deterministic algorithm $A_\mathrm{det}$ and constant $0 \le c < 1$. For $n \ge 4$: if $A_\mathrm{det}$ errs on at most $cn/2$ inputs in $\mathcal{P}$, then its total cost across all inputs in $\mathcal{P}$ (denoted $\mathrm{family\text{-}cost}$) satisfies:
+  \[
+    \mathrm{family\text{-}cost}(A_\mathrm{det}) \;\ge\; \frac{n^2(1 - c^2)}{4}.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Define:
+  \begin{align*}
+    \mathrm{family\text{-}err}(A_\mathrm{det}) &= \text{number of inputs in } \mathcal{P} \text{ on which } A_\mathrm{det} \text{ fails to find an optimal classifier}, \\
+    \mathrm{family\text{-}cost}(A_\mathrm{det}) &= \text{total number of probes across all inputs in } \mathcal{P}.
+  \end{align*}
+
+  \textbf{Step 1: Error counting.} For each $i \notin \{x_1, \ldots, x_t\}$, the algorithm never probes pair $i$, so it outputs the same classifier $h_\mathrm{det}$ on both $P_{-1}(i)$ and $P_{+1}(i)$. By Proposition~\ref{prop:no-shared-opt}, $h_\mathrm{det}$ must fail on at least one of them. Thus:
+  \[
+    \mathrm{family\text{-}err}(A_\mathrm{det}) \;\ge\; n/2 - t.
+  \]
+
+  \textbf{Step 2: Cost accounting.} For each $i \notin \{x_1, \ldots, x_t\}$, the algorithm probes all $t$ pairs on both $P_{-1}(i)$ and $P_{+1}(i)$, contributing $2t$ probes. For $i = x_j$ (i.e., the anomaly is found at position $j$), the algorithm probes $j$ pairs on each of $P_{-1}(x_j)$ and $P_{+1}(x_j)$, contributing $2j$ probes. Hence:
+  \[
+    \mathrm{family\text{-}cost}(A_\mathrm{det}) = 2t \cdot (n/2 - t) + 2\sum_{j=1}^{t} j = nt - t^2 + t.
+  \]
+
+  \textbf{Step 3: Combining.} If $\mathrm{family\text{-}err} \le cn/2$, then $t \ge n(1-c)/2$. For $t \in [n(1-c)/2, \; n/2]$:
+  \[
+    \mathrm{family\text{-}cost} \;\ge\; nt - t^2 \;\ge\; \frac{n^2(1 - c^2)}{4}. \qedhere
+  \]
+\end{proof}
+
+\subsubsection{From Deterministic to Randomized (Corollary 12)}
+
+\begin{corollary}[Corollary 12 in the paper]\label{cor:randomized-lb}
+  For $n \ge 4$, any randomized algorithm $A$ with $\mathrm{family\text{-}err}(A) < n/3$ satisfies $\E[\mathrm{family\text{-}cost}(A)] = \Omega(n^2)$.
+\end{corollary}
+
+\begin{proof}
+  A randomized algorithm is a distribution over deterministic algorithms. Call a deterministic algorithm $A_\mathrm{det}$ \emph{accurate} if $\mathrm{family\text{-}err}(A_\mathrm{det}) \le 2n/5$.
+
+  \textbf{Claim:} $\Pr[A \in A_\mathrm{acc}] > 1/6$. Otherwise, $\Pr[A \notin A_\mathrm{acc}] \ge 5/6$, and since inaccurate algorithms err on $> 2n/5$ inputs:
+  \[
+    \mathrm{family\text{-}err}(A) \;\ge\; \frac{2n}{5} \cdot \Pr[A \notin A_\mathrm{acc}] \;\ge\; \frac{2n}{5} \cdot \frac{5}{6} = \frac{n}{3},
+  \]
+  contradicting $\mathrm{family\text{-}err}(A) < n/3$.
+
+  By Lemma~\ref{lem:det-cost} with $c = 4/5$, every accurate algorithm has $\mathrm{family\text{-}cost} = \Omega(n^2)$, so:
+  \[
+    \E[\mathrm{family\text{-}cost}(A)] \;\ge\; \Omega(n^2) \cdot \Pr[A \in A_\mathrm{acc}] = \Omega(n^2).
+  \]
+\end{proof}
+
+\begin{remark}[How the Corollary implies Theorem~\ref{thm:lb-exact}]
+  If algorithm $A$ finds an optimal classifier with probability $> 2/3$ on \emph{every} input, then $\mathrm{family\text{-}err}(A) < |\mathcal{P}|/3 = n/3$. By Corollary~\ref{cor:randomized-lb}, $\E[\mathrm{family\text{-}cost}(A)] = \Omega(n^2)$. Since $|\mathcal{P}| = n$, by an averaging argument at least one input in $\mathcal{P}$ requires $\Omega(n)$ expected probes.
+\end{remark}
+
+\begin{remark}[Yao's Minimax Theorem]
+  The proof technique follows a standard pattern in computational complexity:
+  \begin{enumerate}
+    \item Construct a hard family of inputs.
+    \item Prove a lower bound on deterministic algorithms averaged over this family.
+    \item Apply Yao's minimax theorem: any randomized algorithm that succeeds on all inputs with high probability must also incur high cost on the hard family.
+  \end{enumerate}
+  This is a game-theoretic argument --- the ``adversary'' (who picks the input) and the ``algorithm'' (who picks the probing strategy) cannot both win cheaply.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Lower Bound for Constant Approximation Ratios}\label{sec:lb-constant}
+
+Having shown that exact optimality is expensive, we now ask: does allowing a constant approximation ratio (e.g., $c = 2$ or $c = 10$) significantly reduce the cost? The answer is: it helps, but there is still a non-trivial lower bound that scales with the \emph{width} $w$.
+
+\begin{theorem}[Theorem 13 in the paper]\label{thm:lb-constant}
+  Let $n', w', k, c$ be arbitrary integers satisfying $n' \ge 2, w' \ge 1, k \ge 0, c \ge 1$, and $n'$ is a multiple of $w'$. Set $n = n' + 2k + 2ckn'$ and $w = w' + \mathbf{1}_{k \ge 1}$. For Problem~\ref{prob:main}, there exists a family $\mathcal{P}$ of inputs with size $n$, width $w$, and optimal monotone error $\kstar = k$ such that any randomized algorithm guaranteeing an expected error $\le c \cdot \kstar$ must probe $\Omega(w' \cdot \mathrm{Log}\,\frac{n'}{w'})$ elements in expectation on at least one input.
+\end{theorem}
+
+\begin{remark}[Special cases]
+  \leavevmode
+  \begin{itemize}
+    \item \textbf{Realizable case} ($k = 0$): The theorem gives a lower bound of $\Omega(w \cdot \mathrm{Log}\,\frac{n}{w})$, matching the RPE upper bound up to constants.
+    \item \textbf{Non-realizable case} ($k \ge 1$): Using $n'/w' \ge n/(4ckw)$, the lower bound becomes $\Omega(w \cdot \mathrm{Log}\,\frac{n}{\kstar w})$.
+  \end{itemize}
+\end{remark}
+
+\subsubsection{Proof Strategy}
+
+The proof proceeds in two stages.
+
+\medskip
+\noindent\textbf{Stage 1: The realizable case ($k = 0$).} We construct a hard family using $w'$ mutually independent boxes in $\R^2$. Each box contains $n'/w'$ points on its main diagonal. Labels are assigned independently per box: for each box, we choose one of $1 + n'/w'$ possible label assignments (specifying how many bottom points get label $-1$). This yields a family of $(1 + n'/w')^{w'}$ inputs.
+
+Since any algorithm that always finds an optimal classifier must distinguish all these inputs, its decision tree must have at least $(1 + n'/w')^{w'}$ leaves. A binary tree with that many leaves has average depth $\Omega(w' \cdot \mathrm{Log}\,\frac{n'}{w'})$, establishing the lower bound for deterministic algorithms. Yao's minimax theorem extends it to randomized ones.
+
+\medskip
+\noindent\textbf{Stage 2: Reduction from non-realizable to realizable.} For $k \ge 1$, we ``pad'' each realizable input with \emph{dummy points} to create a non-realizable instance with $\kstar = k$.
+
+\begin{definition}[Dummy Points Construction]
+  Given a realizable input $P'$ with $w'$ boxes:
+  \begin{enumerate}
+    \item For each box $B_i$ and each pair of consecutive points $p_j, p_{j+1}$ in $B_i$:
+    \begin{itemize}
+      \item If $\mathrm{label}(p_j) = \mathrm{label}(p_{j+1})$: insert $2ck$ dummy points with the same label.
+      \item If $\mathrm{label}(p_j) = -1$ and $\mathrm{label}(p_{j+1}) = +1$ (label transition): insert $ck$ dummies with label $-1$ and $ck$ dummies with label $+1$.
+    \end{itemize}
+    \item Add a \emph{dummy box} independent from all others, containing $2k$ points: the bottom $k$ have label $+1$ and the top $k$ have label $-1$ (deliberately reversed to force $k$ errors).
+  \end{enumerate}
+\end{definition}
+
+\begin{proposition}[Properties of the padded input]
+  The padded input $P$ satisfies:
+  \begin{enumerate}
+    \item $|P| = n' + 2k + 2ckn'$.
+    \item $w = w' + 1$ (the dummy box adds one to the width).
+    \item $\kstar = k$ (any monotone classifier must misclassify at least $k$ points in the dummy box; error $k$ is achievable by classifying all non-dummy points correctly).
+  \end{enumerate}
+\end{proposition}
+
+The key insight is the following:
+
+\begin{lemma}[Dummy points force correctness]
+  If algorithm $A$ guarantees error $\le c \cdot \kstar = ck$ on the padded input $P$, then $A$ must correctly classify \emph{every non-dummy point} in $P$.
+\end{lemma}
+
+\begin{proof}
+  Suppose the classifier $h$ output by $A$ misclassifies some non-dummy point $p$. Without loss of generality, suppose $\mathrm{label}(p) = -1$ but $h(p) = +1$. By construction, $p$ is dominated by at least $ck$ dummy points that also have label $-1$. Since $h$ is monotone and maps $p$ to $+1$, it must also map all points dominating $p$ to $+1$, misclassifying at least $ck$ dummy points. Adding $p$ itself, $\mathrm{err}_P(h) \ge ck + 1 > c\kstar$, violating the guarantee.
+\end{proof}
+
+Since the algorithm must correctly classify all non-dummy points, it effectively solves the realizable problem on the original $P'$. Therefore, the $\Omega(w' \cdot \mathrm{Log}\,\frac{n'}{w'})$ lower bound from Stage 1 carries over.
+
+\begin{example}
+  Consider $w' = 3$ boxes with $n'/w' = 4$ points each ($n' = 12$), and $k = 2, c = 3$.
+  \begin{itemize}
+    \item Each gap between consecutive points gets $2ck = 12$ dummy points.
+    \item A dummy box gets $2k = 4$ points (top 2 labelled $-1$, bottom 2 labelled $+1$).
+    \item Total: $n = 12 + 4 + 2 \cdot 3 \cdot 2 \cdot 12 = 12 + 4 + 144 = 160$.
+    \item If the algorithm misclassifies any original point $p$, it also misclassifies $\ge ck = 6$ dummy neighbours, so $\mathrm{err} \ge 7 > ck = 6$. Thus $p$ must be classified correctly.
+  \end{itemize}
+\end{example}
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Lower Bound for Arbitrary $\varepsilon$}\label{sec:lb-arbitrary}
+
+The previous lower bounds address the exact case and constant approximation ratios. The final result establishes a lower bound for \emph{any} $\varepsilon > 0$, showing that the $1/\varepsilon^2$ dependence in the coreset algorithm is unavoidable.
+
+\begin{theorem}[Theorem 14 in the paper]\label{thm:lb-arbitrary}
+  Let $0 < \varepsilon \le 1/10$. Fix integers $n \ge 1$ and $w \ge 1$ such that $n$ is a multiple of $w$ and $n \ge \frac{w \ln n}{\varepsilon^2}$. Any algorithm for Problem~\ref{prob:main} under $d = 2$ that guarantees expected error $(1+\varepsilon)\kstar$ must probe $\Omega(w/\varepsilon^2)$ elements in expectation on at least one input with width $w$.
+\end{theorem}
+
+\begin{remark}
+  This is arguably the most technically demanding result in the paper. The proof uses techniques from \emph{hypothesis testing} --- specifically, the difficulty of distinguishing two slightly different coin biases from a limited number of samples.
+\end{remark}
+
+\subsubsection{The Hard Input}
+
+Fix $w$ distinct locations $x_1, \ldots, x_w \in \R^2$ such that no location dominates another (width $w$). Place $n/w$ points at each location, each with a distinct ID.
+
+\begin{definition}[Random labelling]
+  Define:
+  \[
+    \gamma = 9\varepsilon, \qquad \mu_1 = \frac{1-\gamma}{2}, \qquad \mu_2 = \frac{1+\gamma}{2}.
+  \]
+  Each location $x_i$ is independently assigned a bias $\mu[i] \in \{\mu_1, \mu_2\}$ uniformly at random. Then each point at location $x_i$ receives label $+1$ with probability $\mu[i]$ and label $-1$ with probability $1 - \mu[i]$, independently.
+\end{definition}
+
+\begin{remark}[Intuition]
+  At each location, the ``majority label'' is determined by whether $\mu[i] = \mu_2$ (majority $+1$) or $\mu[i] = \mu_1$ (majority $-1$). The optimal classifier maps $x_i$ to the majority label. The algorithm needs to \emph{infer the majority} at each location, which requires distinguishing $\mu_1$ from $\mu_2$ --- two values that differ by only $\gamma = 9\varepsilon$.
+\end{remark}
+
+\subsubsection{The Two Random Processes}
+
+The proof introduces two random processes that generate the same distribution over outcomes but differ in \emph{when} labels are assigned.
+
+\medskip
+\noindent\textbf{RP-1 (All labels upfront):}
+\begin{enumerate}
+  \item Sample $\mu \in \{\mu_1, \mu_2\}^w$ uniformly at random.
+  \item Label \emph{every} point at $x_i$ with $\Pr[+1] = \mu[i]$.
+  \item Run algorithm $A$ on the labelled $P$.
+  \item Measure $R_1 = \mathrm{err}_P(h_A) / \kstar$.
+\end{enumerate}
+
+\noindent\textbf{RP-2 (Labels on demand):}
+\begin{enumerate}
+  \item Sample $\mu \in \{\mu_1, \mu_2\}^w$ uniformly at random.
+  \item When $A$ probes a point $p$ at $x_i$, assign its label with $\Pr[+1] = \mu[i]$.
+  \item After $A$ finishes, label all remaining (un-probed) points.
+  \item Measure $R_2 = \mathrm{err}_P(h_A) / \kstar$.
+\end{enumerate}
+
+\begin{lemma}[Lemma 15 in the paper]\label{lem:rp-equiv}
+  $\E[R_1] = \E[R_2]$ and $\E[\Lambda_1] = \E[\Lambda_2]$, where $\Lambda_j$ is the number of probes in RP-$j$.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  Both processes assign labels from the same distribution. The only difference is timing: RP-1 assigns all labels before the algorithm runs, RP-2 assigns them as needed. Since the algorithm's decisions depend only on the labels it has \emph{seen} (not unseen ones), the distribution of all observable quantities --- including the algorithm's output and cost --- is identical.
+\end{proof}
+
+\begin{remark}
+  The purpose of RP-2 is to make the analysis cleaner. In RP-2, we can reason about what the algorithm ``knows'' after probing: it has seen some labels at each location and must infer $\mu[i]$ from them. This connects to the classical problem of distinguishing two coin biases.
+\end{remark}
+
+\subsubsection{The Distinguishing Barrier}
+
+The heart of the lower bound is the following result from statistical learning theory.
+
+\begin{lemma}[Lemma 17; Anthony--Bartlett]\label{lem:distinguish}
+  Let $\mu$ be a random variable that equals $\mu_1$ or $\mu_2$ each with probability $1/2$. Let $\Sigma = (X_1, \ldots, X_m)$ be a sequence of i.i.d.\ samples with $\Pr[X_i = 1] = \mu$ and $\Pr[X_i = -1] = 1 - \mu$. If $m < M$ where
+  \[
+    M = \frac{\ln(9/8) \cdot (1 - \gamma^2)}{\gamma^2},
+  \]
+  then no algorithm can correctly infer $\mu$ from $\Sigma$ with probability greater than $2/3$.
+\end{lemma}
+
+\begin{remark}
+  Since $\gamma = 9\varepsilon$, we have $M = \Theta(1/\varepsilon^2)$. This means that distinguishing $\mu_1$ from $\mu_2$ at a single location requires $\Theta(1/\varepsilon^2)$ samples. This is the fundamental bottleneck.
+\end{remark}
+
+\subsubsection{Light and Heavy Locations}
+
+We say location $i$ is \emph{light} if $\Pr[A \text{ probes fewer than } M \text{ points at } x_i] \ge 3/4$, and \emph{heavy} otherwise.
+
+\begin{lemma}[Lemma 18 in the paper]\label{lem:light}
+  If $\E[\Lambda_2] \le wM/8$, then more than $w/2$ locations are light.
+\end{lemma}
+
+\begin{proof}
+  For each heavy location $i$, $\Pr[\text{probes at } x_i \ge M] > 1/4$, so $\E[\text{probes at } x_i] > M/4$. If $\ge w/2$ locations were heavy, the total expected probes would exceed $(w/2)(M/4) = wM/8$, contradicting the budget $\E[\Lambda_2] \le wM/8$.
+\end{proof}
+
+\begin{lemma}[Lemma 19 in the paper]\label{lem:wrong-guess}
+  If location $i$ is light, then the algorithm's classifier ``guesses wrong'' at $x_i$ (i.e., maps $x_i$ to the minority label) with probability $> 1/4$.
+\end{lemma}
+
+\begin{proof}
+  By Lemma~\ref{lem:distinguish}, when fewer than $M$ samples are seen at $x_i$, the algorithm cannot infer $\mu[i]$ with probability $> 2/3$. It guesses wrong with probability $> 1/3$. Since $i$ is light (fewer than $M$ samples with probability $\ge 3/4$):
+  \[
+    \Pr[\text{wrong guess}] \;\ge\; \Pr[\text{wrong} \mid \text{few samples}] \cdot \Pr[\text{few samples}] > \frac{1}{3} \cdot \frac{3}{4} = \frac{1}{4}. \qedhere
+  \]
+\end{proof}
+
+\subsubsection{Completing the Proof}
+
+Each wrong guess at location $x_i$ causes the classifier to misclassify the majority at that location, adding excess error of at least $n\gamma/(2w)$. With more than $w/2$ light locations and each contributing excess error with probability $> 1/4$:
+
+\[
+  \E[\text{excess error}] \;\ge\; \frac{w}{2} \cdot \frac{1}{4} \cdot \frac{n\gamma}{2w} = \frac{n\gamma}{16}.
+\]
+
+The optimal error is $\kstar \le n(1/2 - \gamma/4)$, so the expected approximation ratio satisfies:
+
+\[
+  \E[R_2] \;\ge\; 1 + \frac{n\gamma/16}{n(1/2 - \gamma/4)} > 1 + \frac{153}{144}\varepsilon > 1 + \varepsilon.
+\]
+
+By Lemma~\ref{lem:rp-equiv}, $\E[R_1] = \E[R_2] > 1 + \varepsilon$, meaning the algorithm with budget $\le wM/8 = \Theta(w/\varepsilon^2)$ cannot guarantee expected error $(1+\varepsilon)\kstar$.
+
+\begin{remark}[The role of the Chernoff bound]
+  The proof also uses a Chernoff bound (Lemma 20 in the paper) to show that, with high probability, the labelled set $P$ is ``intended'' --- meaning each location has close to the expected number of majority-label points. This ensures that $\kstar$ is well-behaved and the excess error from wrong guesses is reliably large.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Near-Optimality of the Algorithms}\label{sec:near-optimality}
+
+With both upper and lower bounds in hand, we can now compare them side by side. The following table summarizes the results:
+
+\begin{table}[ht]
+\centering
+\caption{Matching upper and lower bounds for Problem~\ref{prob:main}}
+\begin{tabular}{llll}
+\toprule
+\textbf{Regime} & \textbf{Upper Bound} & \textbf{Lower Bound} & \textbf{Gap} \\
+\midrule
+$\varepsilon = 0$ & $O(n)$ & $\Omega(n)$ \scriptsize{[Thm~\ref{thm:lb-exact}]} & \textbf{Tight} \\
+constant $c > 1$ & $O(w \cdot \mathrm{Log}\,\frac{n}{w})$ \scriptsize{[RPE]} & $\Omega(w \cdot \mathrm{Log}\,\frac{n}{(\kstar\!+\!1)w})$ \scriptsize{[Thm~\ref{thm:lb-constant}]} & Tight$^*$ \\
+any $\varepsilon > 0$ & $O\!\left(\frac{w}{\varepsilon^2} \mathrm{Log}\,\frac{n}{w} \cdot \log n\right)$ \scriptsize{[Cor~\ref{cor:main}]} & $\Omega(w/\varepsilon^2)$ \scriptsize{[Thm~\ref{thm:lb-arbitrary}]} & $O(\mathrm{Log} \cdot \log)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent {\small $^*$Tight when $\kstar \le (n/w)^{1-\delta}$ for any small constant $\delta > 0$.}
+
+\medskip
+Several conclusions emerge:
+
+\begin{enumerate}
+  \item \textbf{$\varepsilon = 0$ is hopeless.} The $\Omega(n)$ lower bound matches the trivial $O(n)$ upper bound (probe everything). No algorithm can do better.
+
+  \item \textbf{Width $w$ is the correct complexity parameter.} Both upper and lower bounds scale with $w$, confirming that the \emph{dominance width} --- not $n$ or $d$ --- captures the intrinsic difficulty of monotone classification. This is a key structural insight of the paper.
+
+  \item \textbf{The $1/\varepsilon^2$ dependence is necessary.} The $\Omega(w/\varepsilon^2)$ lower bound shows that the quadratic dependence on $1/\varepsilon$ in the coreset algorithm is not an artifact of the proof technique --- it is a fundamental requirement. Halving $\varepsilon$ quadruples the cost.
+
+  \item \textbf{Only a polylogarithmic gap remains.} The gap between the upper bound $O(w/\varepsilon^2 \cdot \mathrm{Log}(n/w) \cdot \log n)$ and the lower bound $\Omega(w/\varepsilon^2)$ is a factor of $O(\mathrm{Log}(n/w) \cdot \log n)$. Closing this gap --- from either direction --- remains an open problem.
+\end{enumerate}
+
+\begin{remark}[The ``true'' complexity]
+  The paper concludes that the true complexity of Problem~\ref{prob:main} is $\Theta(w/\varepsilon^2)$ up to polylogarithmic factors. This is a strong characterization: regardless of the input distribution, dimensionality, or value of $\kstar$, the cost is essentially determined by $w$ and $\varepsilon$ alone.
+\end{remark}
+
+% ─────────────────────────────────────────────────────────────
+\subsection{Mathematical Machinery (Supplementary)}\label{sec:math-machinery}
+
+This section collects the key mathematical tools used in the lower bound proofs. These are not specific to monotone classification --- they are general-purpose techniques from combinatorics, probability, and learning theory.
+
+\subsubsection{Concentration Bounds (Chernoff Bounds)}
+
+Chernoff bounds quantify how closely the average of independent random variables approximates its expectation. They are used throughout the paper for sample-based estimation.
+
+\begin{lemma}[Chernoff bounds]
+  Let $X_1, \ldots, X_t$ be independent Bernoulli random variables with $\Pr[X_i = 1] = \mu$.
+  \begin{itemize}
+    \item \textbf{Multiplicative form:} For any $\gamma \in (0, 1]$:
+    \[
+      \Pr\!\left[\left|\mu - \frac{1}{t}\sum_{i=1}^t X_i\right| \ge \gamma\mu\right] \;\le\; 2\exp\!\left(-\frac{\gamma^2 t\mu}{3}\right).
+    \]
+    \item \textbf{Upper tail:} For any $\gamma \ge 0$:
+    \[
+      \Pr\!\left[\frac{1}{t}\sum_{i=1}^t X_i \ge (1+\gamma)\mu\right] \;\le\; \exp\!\left(-\frac{\gamma^2}{2+\gamma} \cdot t\mu\right).
+    \]
+  \end{itemize}
+\end{lemma}
+
+\begin{remark}[Application in this paper]
+  Chernoff bounds are used in two ways:
+  \begin{enumerate}
+    \item \textbf{Coreset construction} (Section~3): to ensure that $G_1, G_2, F_\alpha$ approximate the true error with high probability. The sample size $O(1/\varepsilon^2 \cdot \log(n/\delta))$ comes directly from inverting the Chernoff bound.
+    \item \textbf{Lower bound for arbitrary $\varepsilon$} (Theorem~\ref{thm:lb-arbitrary}): to show that the labelled set is ``intended'' with high probability (Lemma 20 in the paper).
+  \end{enumerate}
+\end{remark}
+
+\subsubsection{Yao's Minimax Theorem}
+
+\begin{theorem}[Yao's Minimax Theorem]
+  Let $\mathcal{P}$ be a distribution over inputs. If every deterministic algorithm has expected cost at least $C$ on inputs drawn from $\mathcal{P}$, then every randomized algorithm has expected cost at least $C$ on some (worst-case) input.
+\end{theorem}
+
+\begin{remark}
+  Yao's theorem converts an \emph{average-case lower bound for deterministic algorithms} into a \emph{worst-case lower bound for randomized algorithms}. It is a fundamental tool in complexity theory, used here in both the $\varepsilon = 0$ proof (Theorem~\ref{thm:lb-exact}) and the constant-ratio proof (Theorem~\ref{thm:lb-constant}).
+\end{remark}
+
+\subsubsection{VC-Dimension and Related Quantities}
+
+The paper proves in Appendix~B that several standard complexity measures of the hypothesis class $\Hmon$ are all $\Omega(w)$:
+
+\begin{definition}[VC-dimension]
+  The \textbf{VC-dimension} $\lambda$ of $\Hmon$ on $P$ is the size of the largest subset $S \subseteq P$ that can be \emph{shattered} by $\Hmon$: for every labelling $f : S \to \{-1, +1\}$, there exists $h \in \Hmon$ with $h(p) = f(p)$ for all $p \in S$.
+\end{definition}
+
+\begin{proposition}[VC-dimension lower bound]
+  The VC-dimension of $\Hmon$ on $P$ is at least $w$ (the width of $P$).
+\end{proposition}
+
+\begin{proof}
+  Let $p_1, \ldots, p_w$ be $w$ pairwise incomparable points in $P$ (guaranteed by Dilworth's theorem). For any labelling $f$, define $h \in \Hmon$ by: if $f(p_i) = +1$, set $h(q) = +1$ for all $q \succeq p_i$; if $f(p_i) = -1$, set $h(q) = -1$ for all $q \preceq p_i$. Since the $p_i$ are pairwise incomparable, these constraints are consistent, so $\{p_1, \ldots, p_w\}$ is shattered.
+\end{proof}
+
+The paper similarly shows that the \textbf{disagreement coefficient} $\theta$, the \textbf{star number} $s$, and the \textbf{teaching dimension} $\chi$ of $\Hmon$ are all $\Omega(w)$ in the worst case. This is significant because:
+\begin{itemize}
+  \item Existing active learning algorithms have costs that depend on these quantities (see bounds (5) and (6) in Section 1.3 of the paper).
+  \item Since all four measures are $\Omega(w)$, the best cost achievable by prior methods is at least $\Omega(w^2/\varepsilon^2)$ or $\Omega(w + n \cdot w / (\varepsilon \kstar))$, which is \emph{worse} than the $O(w/\varepsilon^2 \cdot \mathrm{Log}(n/w) \cdot \log n)$ achieved by the coreset algorithm.
+\end{itemize}
+
+This establishes that the algorithms in this paper strictly improve over the state of the art in active learning for monotone classification.
 
 \newpage
 
