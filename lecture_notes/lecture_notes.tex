@@ -352,10 +352,24 @@ For each remaining pair $(e_1, e_2) \in S$, the comparison step quantifies their
   \item For text attributes such as \texttt{p-name} and \texttt{p-description}, functions such as edit distance, Jaccard similarity, or cosine similarity may be employed. 
 \end{itemize}
 
-This process yields a $d$-dimensional set of points $P = \{p_{e_1,e_2} \mid (e_1, e_2) \in S\}$ which is handed over to the Matching step.
 \begin{example}
+  Consider an entity pair $(e_1, e_2) \in S$. $e_1$ is a Shopee listing and $e_2$ is a Lazada listing for what may be the same product. Suppose each entity has the attributes \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. We pass each attribute pair into a pre-defined similarity function as follows:
+  \begin{itemize}
+    \item \texttt{p-name}: a text attribute --- use Jaccard similarity. E.g., \textit{``Sony WH-1000XM5''} vs \textit{``Sony Noise Cancelling XM5''} $\rightarrow$ $sim_1(e_1, e_2) = 0.8$
+    
+    \item \texttt{p-description}: a long text attribute --- use cosine similarity. $\rightarrow$ $sim_2(e_1, e_2) = 0.65$
+    
+    \item \texttt{p-year}: a numerical attribute --- use exact match, returning 1 if equal and 0 otherwise. $\rightarrow$ $sim_3(e_1, e_2) = 1$
+    
+    \item \texttt{p-price}: a numerical attribute --- use $-|e_1.\texttt{price} - e_2.\texttt{price}|$. E.g., \$350 vs \$345 $\rightarrow$ $sim_4(e_1, e_2) = -5$
+  \end{itemize}
 
+  The resulting point representing this pair in $\mathbb{R}^4$ is: $$p_{e_1, e_2} = (0.8,\ 0.65,\ 1,\ -5)$$
+
+  This will be done for every pair in $S$
 \end{example}
+
+This process yields a $d$-dimensional set of points $P = \{p_{e_1,e_2} \mid (e_1, e_2) \in S\}$ which is handed over to the Matching step.
 
 \subsubsection{Matching}
 The entity matching objective now becomes a binary classification task of assigning each point $p_{e_1,e_2} \in P$ to its correct ground truth label, which is $+1$ for a matching pair and $-1$ otherwise. While the ultimate approach to this would be with human judgement, this paper introduces \textbf{Monotone Classification} as a way to automate the process while ensuring a high degree of labelling accuracy.
@@ -397,9 +411,22 @@ $$k^* = \min_{h \in \mathbb{H}_{mon}} err_P(h)$$
 
 Note that $k^*$ need not be zero --- in practice, the labels in $P$ may not perfectly obey monotonicity due to noise in the data, meaning even the best monotone classifier will misclassify some points.
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{../classification_example.png}
+  \caption{Labelling of input set $P$ by monotone classifier $h$}
+  \label{fig:classification-example}
+\end{figure}
+\begin{example}
+  Consider the 2D point set $P$ illustrated in Figure 2 taken from Professor Tao's original paper \cite{tao21}. Each point $p_{e_1,e_2} \in P$ represents an entity pair with $d = 2$ similarity features. Black points carry label $+1$ (match) and white points carry label $-1$ (non-match).
+
+  The monotone classifier $h$ that maps all black points to $+1$ except $p_1$, and all white points to $-1$ except $p_{11}$ and $p_{15}$, achieves $err_P(h) = 3$. No other monotone classifier does better on $P$, and hence $k^* = 3$. Note that $k^* > 0$ --- this is the non-realizable case, as no monotone classifier can perfectly separate all points in $P$.
+\end{example}
+
+
 We now want an algorithm $\mathcal{A}$ to find a classifier from $\mathbb{H}_{mon}$ with low error on $P$. Note that in the beginning, the labels on all points in $P$ are hidden. In order for $\mathcal{A}$ to gain better understanding in forming an optimal classifier, it is allowed to query an \emph{oracle} --- a human expert in practice -- to reveal the ground truth label of a chosen point $p \in P$. This action is defined as a \emph{probe}. To assess the efficiency of the $\mathcal{A}$, we can measure its cost by the number of \emph{probes} it makes.
 
-To find an optimal monotone classifer on $P$, one can simply have $\mathcal{A}$ to probe all of $P$ with a cost of n. On the other hand, not probing at all will incurr zero cost but the classifier may perform poorly on $P$. This presents us with the challenge of minimizing the number of probes while still producing a classifier with sufficiently low error.
+To find an optimal monotone classifer on $P$, one can simply have $\mathcal{A}$ to probe all of $P$ with a cost of n. On the other hand, not probing at all would incur zero cost but the classifier may perform poorly on $P$. This presents us with the challenge of minimizing the number of probes while still producing a classifier with sufficiently low error.
 
 Formally, given a tolerance parameter $\epsilon \geq 0$, the goal is to determine the minimum number of probes required to guarantee a classifier with error at most $(1 + \epsilon) \cdot k^*$. This is defined formally below.
 
@@ -431,7 +458,6 @@ non-realizable case --- same philosophy, different context.
 
 In the context of Entity Matching, the non-realizable case is the norm. Furthermore, unlike the Perceptron, labels are \textbf{not} visible from the start --- they are hidden and can only be revealed through probing. This is where \textbf{Active Classification} comes in. Devise a learning strategy where the algorithm selectively chooses which points to probe rather than requiring all labels upfront, gathering just enough evidence to construct a classifier with error at most $(1+\epsilon)k^*$ while minimizing the number of probes. In other words, Active Classification takes into account cost apart from just accuracy. 
 
-\newpage
 The contrast with passive classification is summarized below:
 
 \begin{table}[h]
@@ -451,8 +477,6 @@ Goal & Zero training error & $(1+\epsilon)k^*$ error \\
 \end{table}
 
 A key limitation of existing active learning approaches is that they require prior knowledge of $k^*$ --- the optimal monotone error --- before the algorithm even begins. This is an unrealistic assumption in practice, since $k^*$ can only be determined after all labels are revealed. This paper proposes algorithms that require no such prior knowledge, working instead by strategically probing points to implicitly converge towards a $(1+\epsilon)$-approximate solution --- which we examine in the sections that follow.
-
-\newpage
 
 % ============================================================
 \section{RPE Algorithm}
