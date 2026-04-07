@@ -366,7 +366,7 @@ For each remaining pair $(e_1, e_2) \in S$, the comparison step quantifies their
 
   The resulting point representing this pair in $\mathbb{R}^4$ is: $$p_{e_1, e_2} = (0.8,\ 0.65,\ 1,\ -5)$$
 
-  This will be done for every pair in $S$
+  This will be done for every pair in $S$.
 \end{example}
 
 This process yields a $d$-dimensional set of points $P = \{p_{e_1,e_2} \mid (e_1, e_2) \in S\}$ which is handed over to the Matching step.
@@ -481,17 +481,248 @@ A key limitation of existing active learning approaches is that they require pri
 % ============================================================
 \section{RPE Algorithm}
 % ============================================================
+Having formulated the problem in Section~\ref{prob:main}, we now turn to our first algorithm for solving it: the Random Probes with Elimination (RPE) algorithm. This algorithm is the paper's primary contribution for the realizable case ($k^*$=0) and serves as the foundation for the more general coreset-based approach in Section~\ref{sec:rcc}.
 
 \subsection{The Algorithm}
 % Describe Random Probes with Elimination (RPE): iterative random probing
 % and elimination of elements via the monotonicity constraint.
+RPE repeatedly performs two steps:
+\begin{enumerate}
+    \item Pick a random point and query its label
+    \item Use monotonicity to eliminate all points whose labels are now determined
+\end{enumerate}
+\smallskip
+\textbf{algorithm RPE(P):}
+\[
+\begin{array}{l}
+\text{1. } Z = \emptyset \\
+\text{2. } \textbf{while } P \neq \emptyset \textbf{ do} \\
+\text{3. } \quad \text{probe an element } z \in P \text{ chosen uniformly at random and add } z \text{ to } Z \\
+\text{4. } \quad \textbf{if } \text{label}(z) = 1 \textbf{ then remove from } P \text{ every } p \in P \text{ satisfying } p \succeq z \\
+\text{5. } \quad \textbf{else remove from } P \text{ every } p \in P \text{ satisfying } z \succeq p \\
+\qquad \text{/* note: } z \text{ is removed by Line 4 or 5 */} \\
+\text{6. } \textbf{return } Z
+\end{array}
+\]
+
+\begin{remark} [Intutition] If a point $z$ is positive, then every point above it must also be positive → remove them.
+If $z$ is negative, then every point below it must also be negative → remove them.
+Thus, each probe “wipes out” a whole region of points.
+\end{remark}
+
+The set $Z$ returned by RPE is the set of all probed points. The classifier produced from $Z$ is:
+
+\[
+h_{\text{RPE}}(p) = 
+\begin{cases} 
+ 1 & \text{if } \exists z \in Z \text{ such that } \text{label}(z) = 1 \text{ and } p \succeq z, \\
+ -1 & \text{otherwise}.
+\end{cases}
+\]
+
+That is, a point $p$ is classified as positive if it lies above any known positive point; otherwise it is classified as negative. Thus, the algorithm only needs to remember:
+“Where are the confirmed positive points?” 
+
+\subsubsection*{Why is the Classifier always Monotone?} 
+Suppose for contradiction that there exist points $p \succ q$ such that $h_{\text{RPE}}(p) = -1$ and $h_{\text{RPE}}(q) = 1$. Since $h_{\text{RPE}}(q) = 1$, there exists some $z \in Z$ with $\text{label}(z) = 1$ such that $q \succeq z$. But then $p \succ q \succeq z$, so $p \succeq z$ as well. By the definition of $h_{\text{RPE}}$, this implies $h_{\text{RPE}}(p) = 1$, contradicting the assumption that $h_{\text{RPE}}(p) = -1$.
+
+\begin{remark}[Intuition]
+If a point $q$ is labelled $+1$, it must dominate some positive probe $z$ in $Z$. If another point $p$ dominates $q$, then by transitivity ($p \succeq q \succeq z$), 
+$p$ also dominates that same positive probe $z$ and must therefore also be $+1$.
+\end{remark}
 
 \subsection{Why It Works}
 % Intuition and correctness argument behind the elimination strategy.
+The efficiency of RPE stems from the fact that each probe does ``double duty''. When RPE probes a point $z$ and learns its label, monotonicity immediately determines the labels of an entire region points that are comparable to $z$.
+\begin{itemize}
+  \item If $\text{label}(z) = 1$: any point $p \succeq z$ is at least as similar as $z$ on every feature. Monotonicity forces $h(p) \ge h(z) = 1$, so all such $p$ must be labelled $+1$ and can be removed from $P$.
+  \item If $\text{label}(z) = -1$: any point $p \preceq z$ is dominated by $z$, so monotonicity forces $h(p) \le h(z) = -1$. All such $p$ must be labelled $-1$ and are removed.
+\end{itemize}
 
-\subsection{Guarantees and Limitations}
+Only points whose label cannot yet be inferred by monotonicity remain in $P$ after each elimination step. These are the points the algorithm must still resolve, and it will probe them in subsequent iterations.
+
+\subsection{A Worked Example: RPE in Action}
+We trace RPE on the 2D point set $P$ from Figure~\ref{fig:classification-example}. Recall that black points have label $+1$ and white points have label $-1$. The optimal monotone classifier achieves $k^* = 3$ by misclassifying only $p_1, p_{11}, p_{15}$. The dominance width of this input is $w = 6$.
+
+\begin{example}[from paper, Example 1.3]
+Suppose RPE randomly probes $p_1$ first.
+\begin{itemize}
+  \item \textbf{Step 1:} Probe $p_1$. The oracle reveals $\text{label}(p_1) = 1$. RPE removes every $p \succeq p_1$. Since $p_1$ sits towards the bottom-left of the figure, it dominates (or equals) almost all other points. The entire $P$ is eliminated except $p_6, p_7, p_8$ (which lie below or incomparable to $p_1$).
+  \item \textbf{Step 2:} Probe $p_8$. The oracle reveals $\text{label}(p_8) = -1$. RPE removes every $p \preceq p_8$, which eliminates $p_6, p_7$ and $p_8$ itself. $P$ is now empty. RPE terminates with $Z = \{p_1, p_8\}$.
+  \item \textbf{Classifier output:} Since $\text{label}(p_1) = 1$, every point $p \succeq p_1$ is mapped to $+1$ by $h_{\text{RPE}}$. All other points (including $p_6, p_7, p_8$) are mapped to $-1$. 
+  \item \textbf{Error:} $\text{err}_P(h_{\text{RPE}}) = 5$ (5 white points mapped to $+1$ due to dominating $p_1$).
+\end{itemize}
+\end{example}
+
+This example demonstrates how a single probe of $p_1$ is enough to determine the labels of 13 out of 16 points. The cost of 2 probes is far below the naïve cost of $n = 16$. Note, however, that the error of $5$ exceeds $k^* = 3$ --- we will see why this is expected and bounded by the $2k^*$ guarantee.
+\newpage
+
+\subsection{Guarantees}
 % State the factor-of-2 approximation guarantee.
+The following theorem (proved in full in the paper) captures the performance of RPE:
+\begin{theorem}[RPE Guarantees]\label{thm:rpe}
+For Problem~\ref{prob:main}, the RPE algorithm satisfies:
+\begin{itemize}
+  \item \textbf{Expected error:} The classifier $h_{\text{RPE}}$ has expected error at most $2k^*$:
+  \[
+    \mathbb{E}[\text{err}_P(h_{\text{RPE}})] \le 2k^*.
+  \]
+  \item \textbf{Expected cost:} RPE probes at most $O\bigl(w \cdot \log(n/w)\bigr)$ elements in expectation, where $w$ is the dominance width of $P$, $n = |P|$, and $\log(x) = \log_2(1+x)$.
+\end{itemize}
+\end{theorem}
+
+Two aspects of this theorem are worth emphasizing. First, RPE never needs to compute $w$ --- the width is only used in the analysis. Second, when $k^* = 0$ (the realizable case), the expected error guarantee of $2k^* = 0$ means RPE always finds an optimal classifier.
+
+\subsubsection*{Proof Sketch}
+
+\subsubsection*{1. Error Analysis} 
+Fix any monotone classifier $h \in \mathbb{H}_{\text{mon}}$. Call a point $p \in P$ \emph{$h$-good} if $h(p) = \text{label}(p)$ and \emph{$h$-bad} otherwise. The proof proceeds by induction on $|P|$, showing:
+\begin{lemma}
+  \item The number of \emph{$h$-good} elements misclassified by $h_{\text{RPE}}$ is at most $\text{err}_P(h)$ in expectation.
+\end{lemma}
+Setting $h = h^*$ (the optimal classifier), there are exactly $k^*$ $h^*$-bad elements. The total expected error is thus $\le k^* + k^* = 2k^*$.
+
+\medskip
+The central tool in the inductive argument is a \textbf{pairing between influence sets}. When RPE probes a point $z$, it may cause other points to be misclassified:
+\begin{itemize}
+    \item For an $h$-bad point $p$, $I_{\text{bad}}(p)$ is the set of $h$-good points that get forced into the wrong label if $p$ is probed first.
+    \item For an $h$-good point $q$, $I_{\text{good}}(q)$ is the set of $h$-bad points that get forced into the correct label (according to $h$) if $q$ is probed first.
+\end{itemize}
+
+The key insight is that these influences balance perfectly:
+\begin{lemma}
+For any $h$-bad $p \in P$ and $h$-good $q \in P$,
+$q \in I_{\text{bad}}(p) \iff p \in I_{\text{good}}(q)$.
+Hence, $\sum_{p \in \text{bad}} |I_{\text{bad}}(p)| = \sum_{q \in \text{good}} |I_{\text{good}}(q)|$.
+\end{lemma}
+
+\textbf{Why does this give the $2k^*$ bound on the total expected error?} Because the total ``potential for error'' (left side) equals the total ``potential for correction'' (right side), the expected number of $h$-good points misclassified by RPE is bounded by the number of $h$-bad points ($k^*$). Adding the $k^*$ bad points themselves (which are always misclassified) yields:
+\[
+E[\text{err}_P(h_{\text{RPE}})] \le k^* + k^* = 2k^*.
+\]
+
+\begin{example}
+  Let $P$ be the set of points in Figure~~\ref{fig:classification-example}, and $h$ be the classifier that maps all the black points to $1$ except $p_1$ and all the white points to $-1$ except $p_{11}$ and $p_{15}$. Thus, $p_1$, $p_{11}$, and $p_{15}$ are $h$-bad, while the other points of $P$ are $h$-good. The following are some representative influence sets:
+\begin{itemize}
+    \item $I_{\text{bad}}(p_{15}) = \{p_4, p_9, p_{10}, p_{12}, p_{13}, p_{14}, p_{16}\}$
+    \item $I_{\text{bad}}(p_1) = \{p_2, p_3, p_5\}$
+    \item $I_{\text{good}}(p_3) = \{p_1\}$
+    \item $I_{\text{good}}(p_9) = \{p_{11}, p_{15}\}$
+\end{itemize}
+\end{example}
+
+\subsubsection*{2. Cost Analysis} 
+The efficiency of RPE is not measured by the total points $n$, but by the dominance width $w$ (the size of the largest set of incomparable points). The proof is summarized as follows:
+\begin{enumerate}
+  \item \textbf{Decomposition}: By Dilworth’s Theorem (Section~\ref{sec:chains}), any point set $P$ can be partitioned into $w$ disjoint chains (where every point in a chain is comparable to the others).
+  \item \textbf{Parallel Search}: RPE effectively performs a randomized search on all $w$ chains simultaneously. Each probe in $P$ is guaranteed to land in one of these chains.
+  \item \textbf{A\&E Game}: Within any single chain, RPE's behavior mimics an ``Attrition-and-Elimination'' game (Section~\ref{sec:ae}). Even if an adversary removes points to try and trick the algorithm, a random probe is likely to ``hit'' near the middle of the remaining chain, eliminating half of it.
+\end{enumerate}
+By summing the expected probes across $w$ chains and applying the concavity of the logarithm (Jensen's Inequality), we arrive at the total expected cost: $O\bigl(w \log \frac{n}{w}\bigr)$.
+
+\subsection{Another Worked Example: Why the Factor of 2 Is Tight}
+
+The error guarantee of $2k^*$ is the \emph{best possible} approximation ratio for RPE. The following example demonstrates this:
+
+\begin{example}\label{ex:tight}
+Consider Figure~\ref{fig:tightRPE}, where a point set $P$ in $\mathbb{R}^2$ contains one black point (label $+1$) and $n-1$ white points (label $-1$).
+
+\textbf{Optimal error:} The monotone classifier that maps all points to $-1$ misclassifies only the black point, so $k^* = 1$.
+
+\textbf{RPE's expected error:} With probability $1/n$, RPE probes the black point first. Since it has label $+1$ and dominates nothing, no points are eliminated. So, all $n-1$ white points remain and are later mapped to $+1$ by $h_{\text{RPE}}$, giving error $n-1$. With probability $1 - 1/n$, RPE probes a white point first, eliminates all dominated points (just itself), and the resulting error is $1$. Thus:
+\[
+\mathbb{E}[\text{err}(h_{\text{RPE}})] = \frac{1}{n}(n-1) + \left(1 - \frac{1}{n}\right)(1) = 2 - \frac{2}{n} \to 2 \quad \text{as } n \to \infty.
+\]
+Since $k^* = 1$, the approximation ratio approaches $2k^*/k^* = 2$. The factor of $2$ is therefore \emph{asymptotically tight} for RPE.
+\end{example}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{../tightRPE.png}
+  \caption{The approximation ratio 2 is tight for RPE.}
+  \label{fig:tightRPE}
+\end{figure}
+
+\subsection{Limitations}
 % Discuss where RPE falls short (e.g.\ dependence on width w).
+RPE has two key limitations:
+\begin{enumerate}
+  \item \textbf{The factor-of-2 error is tight.} As shown in Example~\ref{ex:tight}, no modification to RPE's random-probing strategy can reduce the approximation ratio below $2$. To achieve a ratio of $1+\epsilon$ for arbitrary $\epsilon > 0$, a fundamentally different technique is needed. This is the motivation for the \emph{relative-comparison coreset} approach in Section~\ref{sec:rcc}.
+  \item \textbf{No high-probability guarantee.} Theorem~\ref{thm:rpe} gives an \emph{expected} error bound. In a single run, RPE may produce an error much larger than $2k^*$, as the bad scenario in Example~\ref{ex:tight} illustrates. The coreset-based algorithm upgrades this to a \emph{w.h.p.} guarantee at the cost of an extra $O(\log n / \epsilon^2)$ factor in probes.
+\end{enumerate}
+
+\begin{table}[ht]
+\centering
+\caption{RPE vs. Coreset Algorithm}
+\begin{tabular}{lll}
+\toprule
+\textbf{Property} & \textbf{RPE (Section 2)} & \textbf{Coreset Alg. (Section 3)} \\
+\midrule
+Error guarantee & $\mathbb{E}[\text{err}] \le 2k^*$ (expected) & $(1+\epsilon)k^*$ (w.h.p.) \\
+Approx. ratio & $2$ (tight) & $1+\epsilon$ (any $\epsilon > 0$) \\
+Probing cost & $O(w \cdot \log(n/w))$ & $O\bigl(\frac{w}{\epsilon^2} \cdot \log(n/w) \cdot \log n\bigr)$ \\
+Requires $k^*$? & No & No \\
+High-probability? & No & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Chains, Dilworth's Theorem, and the A\&E Game (Supplementary)}
+
+\emph{This section covers supplementary material relevant to the cost analysis.}
+
+\subsubsection{Chains and Dilworth's Theorem\label{sec:chains}} 
+A \emph{chain} is a subset $S \subseteq P$ where every two elements are comparable under dominance: we can order them as $p_1 \preceq p_2 \preceq \dots \preceq p_{|S|}$. A \emph{chain decomposition} partitions $P$ into disjoint chains. Dilworth's theorem~\cite{dilworth50} guarantees the existence of a chain decomposition using exactly $w$ chains (where $w$ is the width of $P$).
+
+\begin{example}
+The input $P$ in Figure~\ref{fig:classification-example} can be decomposed into $6$ chains:
+\begin{itemize}
+    \item $C_1 = \{p_1, p_2, p_3, p_4, p_{10}\}$
+    \item $C_2 = \{p_{11}\}$
+    \item $C_3 = \{p_5, p_9, p_{12}\}$
+    \item $C_4 = \{p_{16}\}$
+    \item $C_5 = \{p_{13}\}$
+    \item $C_6 = \{p_6, p_7, p_8, p_{14}, p_{15}\}$
+\end{itemize}
+The points $p_{10}, p_{11}, p_{12}, p_{16}, p_{13}, p_{14}$ indicate the absence of any chain decomposition of $P$ having less than $6$ chains.
+\end{example}
+
+\subsubsection{A\&E Game\label{sec:ae}} 
+To analyze RPE's cost within a single chain, the paper introduces a two-player \emph{Attrition-and-Elimination (A\&E) game} on a chain $C$ of $m$ points. In each round:
+\begin{itemize}
+  \item Bob (adversary) may delete any subset of points from $C$ (attrition).
+  \item Alice picks a uniformly random point $p \in C$ and deletes all points $q \succeq p$ (elimination).
+\end{itemize}
+The game ends when $C$ is empty. This generalizes a \textbf{random binary search}: while a standard binary search assumes the points stay put, the A\&E game proves that even if an adversary removes points to ``hide'' the middle, Alice will still finish quickly.
+
+\begin{lemma}Regardless of Bob's strategy, the expected number of rounds $Y$ satisfies $\mathbb{E}[Y] = O(\log m)$.
+\end{lemma}
+
+\noindent The proof proceeds in two steps: showing that each round has a high probability of being ``successful,'' and then bounding the total rounds needed.
+
+\medskip
+\noindent \textbf{1. Probability of a ``Successful'' Round:} 
+Define a round as \emph{successful} if it reduces the number of elements in the chain by at least a factor of $2$. 
+\begin{itemize}
+    \item Let $m'$ be the number of points left after Bob's attrition in a round. 
+    \item Let the points be ordered $p_1 \preceq p_2 \preceq \dots \preceq p_{m'}$. 
+    \item If Alice picks any point $p_i$ where $i \le \frac{m'}{2} + 1$, then at most half the points remain after she eliminates everything dominating $p_i$.
+    \item Since Alice picks uniformly at random, the probability of picking such a point is $> 1/2$. Thus, every round is successful with probability $> 1/2$, regardless of what Bob does.
+\end{itemize}
+
+\medskip
+\noindent \textbf{2. Total Expected Rounds:}
+A chain of size $m$ can only be halved $\log_2(m)$ times before it is empty. Therefore, we only need $\log_2(m)$ ``successful'' rounds to end the game. 
+\begin{itemize}
+    \item If we run $Y = 2\log_2(m)$ rounds, we expect half of them to be successful (which would be exactly $\log_2(m)$).
+    \item Using the properties of independent trials, the probability that we fail to reach $\log_2(m)$ successes in $2\log_2(m)$ rounds is very small (less than $1/m$).
+    \item Even in the worst-case scenario where we never get enough successes, the game must end in at most $m$ rounds (since Alice removes at least one point per round).
+\end{itemize}
+
+Combining these, the expected number of rounds is dominated by the $2\log_2(m)$ term:
+\[
+\mathbb{E}[Y] \le 2\log_2(m) + m \cdot \Pr(\text{failure}) = O(\log m).
+\]
 
 \newpage
 
