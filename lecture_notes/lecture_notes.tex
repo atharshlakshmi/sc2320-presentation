@@ -524,7 +524,9 @@ That is, a point $p$ is classified as positive if it lies above any known positi
 “Where are the confirmed positive points?” 
 
 \subsubsection*{Why is the Classifier always Monotone?} 
+\begin{proof}
 Suppose for contradiction that there exist points $p \succ q$ such that $h_{\text{RPE}}(p) = -1$ and $h_{\text{RPE}}(q) = 1$. Since $h_{\text{RPE}}(q) = 1$, there exists some $z \in Z$ with $\text{label}(z) = 1$ such that $q \succeq z$. But then $p \succ q \succeq z$, so $p \succeq z$ as well. By the definition of $h_{\text{RPE}}$, this implies $h_{\text{RPE}}(p) = 1$, contradicting the assumption that $h_{\text{RPE}}(p) = -1$.
+\end{proof}
 
 \begin{remark}[Intuition]
 If a point $q$ is labelled $+1$, it must dominate some positive probe $z$ in $Z$. If another point $p$ dominates $q$, then by transitivity ($p \succeq q \succeq z$), 
@@ -953,7 +955,7 @@ so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\ha
 \medskip
 \subsubsection{Example (conclusion)} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
   
-\section{Full Algorithmic Description}
+\subsection{Full Algorithmic Description}
 \begin{algorithm}
 \caption{BuildCoreset($P$)}
 \begin{algorithmic}[1]
