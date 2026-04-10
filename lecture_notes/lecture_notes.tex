@@ -742,46 +742,41 @@ The goal of this section is to achieve an approximation ratio of $(1+\varepsilon
 \]
 Since $F(\hat h)\le F(h^*)$ for any optimal $h^*$, this gives $\mathrm{err}_P(\hat h)\le(1+\varepsilon)\kstar$.
 
-\begin{remark}[Why estimating $\mathrm{err}_P(h)$ directly fails]
-A natural idea is to set $F(h)=\mathrm{err}_P(h)$ estimated by probing. But even for $h^{pos}$ (the all-$+1$ classifier), estimating its error to within a constant relative factor requires finding the single $-1$ element (or confirming none exists), which demands $\Omega(n)$ probes in expectation.
-\end{remark}
+A natural approach --- estimating $\mathrm{err}_P(h)$ directly by probing ---
+fails: even for the all-$+1$ classifier $h^{\mathrm{pos}}$, estimating its
+error to within a constant relative factor requires locating the single
+$-1$ element (or confirming none exists), which costs $\Omega(n)$ probes
+in expectation.
  
 % ─────────────────────────────────────────────────────────────
 \subsection{The Unknown-$\Delta$ Technique}
 
-We sidestep the $\Omega(n)$ barrier by constructing $F$ satisfying a weaker condition. Instead of estimating $\mathrm{err}_P(h)$ exactly, we find an $F$ where all estimates are shifted by the same unknown constant $\Delta$:
- 
+We sidestep this barrier by constructing a surrogate $F : \Hmon \to \R$
+satisfying, for all $h \in \Hmon$, a \emph{shifted} approximation with
+some unknown constant $\Delta$:
+
 \begin{equation}\label{eq:Fprop}
   \mathrm{err}_P(h)\!\left(1 - \tfrac{\varepsilon}{4}\right) + \Delta \;\le\; F(h) \;\le\; \mathrm{err}_P(h)\!\left(1 + \tfrac{\varepsilon}{4}\right) + \Delta \qquad \forall\, h \in \Hmon,
 \end{equation}
- 
  
 \begin{proposition}\label{prop:Fimplies}
   Any $F$ satisfying \eqref{eq:Fprop} has the relative $\varepsilon$-comparison property.
 \end{proposition}
  
 \begin{proof}
-  Suppose $F(h) \le F(h')$. Using the left inequality of \eqref{eq:Fprop} for $h$ and the right for $h'$, then cancelling $\Delta$:
-  \begin{align*}
-    \mathrm{err}_P(h)\!\left(1 - \tfrac{\varepsilon}{4}\right)
-    &\;\le\; F(h) - \Delta \;\le\; F(h') - \Delta \;\le\; \mathrm{err}_P(h')\!\left(1 + \tfrac{\varepsilon}{4}\right).
-  \end{align*}
-  Rearranging:
+  If $F(h) \le F(h')$, apply the left bound of \eqref{eq:Fprop} to $h$
+  and the right bound to $h'$, then cancel $\Delta$:
   \[
-    \mathrm{err}_P(h) \;\le\; \frac{1 + \varepsilon/4}{1 - \varepsilon/4}\,\mathrm{err}_P(h') \;\le\; (1+\varepsilon)\,\mathrm{err}_P(h'),
+    \mathrm{err}_P(h)\!\left(1 - \tfrac{\varepsilon}{4}\right)
+    \;\le\; F(h) - \Delta
+    \;\le\; F(h') - \Delta
+    \;\le\; \mathrm{err}_P(h')\!\left(1 + \tfrac{\varepsilon}{4}\right).
   \]
-  where the last step uses $\frac{1+\varepsilon/4}{1-\varepsilon/4} \le 1+\varepsilon$ for all $\varepsilon \in (0,1]$.
+  Rearranging and using $\frac{1+\varepsilon/4}{1-\varepsilon/4} \le 1+\varepsilon$
+  for $\varepsilon \in (0,1]$ gives the result.
 \end{proof}
  
 The key insight: $\Delta$ cancels whenever we \emph{compare} two classifiers. We never need to know its value — only its existence.
-
-\subsubsection{Running Example} 
-We will trace a small 1D instance through the entire construction. Let $P = \{1, 2, 3, 4, 5, 6, 7, 8\}$ with labels
-\[
-  \underbrace{-1, -1, -1, -1}_{\text{points } 1\text{--}4},\; \underbrace{+1, +1, +1, +1}_{\text{points } 5\text{--}8}.
-\]
-Every monotone 1D classifier has the form $h^\tau(p) = +1$ iff $p > \tau$. The optimal classifier is $h_{4.5}$, with $\kstar = 0$. We set $\varepsilon = 1/2$.
-
 % ─────────────────────────────────────────────────────────────
 \subsection{The Coreset Technique}
 
@@ -800,17 +795,42 @@ The novelty of the unknown-$\Delta$ approach is that classical coresets approxim
 % ─────────────────────────────────────────────────────────────
 \subsection{Building the Coreset in 1D: The Recursive Framework}
  
-The 1D construction works by solving the following problem at every level of recursion. The coreset is built by the algorithm \textsc{BuildCoreset}, which solves Problem~\ref{prob:two} recursively.
+\paragraph{Setup.}
+The coreset is built by \textsc{BuildCoreset} (Algorithm~\ref{alg:bc}),
+which recursively solves the following on each subproblem $Q \subseteq P$:
+find $F : \Hmon \to \R$ satisfying both
+\begin{align}
+  |F(h) - \mathrm{err}_Q(h)| &\;\le\; \varepsilon|Q|/64, \label{eq:p2abs}\\
+  \mathrm{err}_Q(h)\!\left(1-\tfrac{\varepsilon}{4}\right) + \Delta
+  &\;\le\; F(h) \;\le\;
+  \mathrm{err}_Q(h)\!\left(1+\tfrac{\varepsilon}{4}\right) + \Delta, \label{eq:p2rel}
+\end{align}
+for some $|\Delta| \le \varepsilon|Q|/64$.
  
-\begin{problem}[1D Function Approximation]\label{prob:two}
-  Let $P$ be a multiset of 1D labeled points (as in Problem~\ref{prob:main} with $d=1$), and $\varepsilon \in (0,1]$. Find a function $F : \Hmon \to \R$ such that every $h \in \Hmon$ satisfies simultaneously:
-  \begin{align}
-    |F(h) - \mathrm{err}_P(h)| &\;\le\; \varepsilon|P|/64, \label{eq:p2abs}\\
-    \mathrm{err}_P(h)\!\left(1-\tfrac{\varepsilon}{4}\right) + \Delta &\;\le\; F(h) \;\le\; \mathrm{err}_P(h)\!\left(1+\tfrac{\varepsilon}{4}\right) + \Delta, \label{eq:p2rel}
-  \end{align}
-  for some (possibly unknown) $\Delta$ with $|\Delta| \le \varepsilon|P|/64$.
-\end{problem}
- 
+\paragraph{Finitising $\Hmon$.}
+Although $\Hmon$ is infinite, only the $|P|+1$ thresholds that fall on or between points of $P$ produce distinct labellings; taking the union bound over this finite set $\Hmon^p$ is what introduces the $\log|P|$ factor in the sample size $m$.
+
+\begin{algorithm}
+\caption{\textsc{BuildCoreset}($P$)}\label{alg:bc}
+\begin{algorithmic}[1]
+\IF{$|P| = 1$}
+    \STATE Probe $p \in P$; add $p$ to $Z$ with $\mathrm{weight}(p) = 1$.
+\ELSE
+    \STATE Sample $S_1$ of size $m$ from $P$; use $G_1$ to find $\alpha, \beta$ and
+           partition $P$ into $P_\alpha$, $P_{\mathrm{mid}}$, $P_{\mathrm{rest}}$.
+    \IF{$P_{\mathrm{rest}} \neq \emptyset$}
+        \STATE Sample $S_2$ of size $m$ from $P_{\mathrm{rest}}$;
+               add $S_2$ to $Z$ with weight $|P_{\mathrm{rest}}|/|S_2|$.
+    \ENDIF
+    \IF{$P_\alpha \neq \emptyset$}
+        \STATE Sample $S_\alpha$ of size $m$ from $P_\alpha$;
+               add $S_\alpha$ to $Z$ with weight $|P_\alpha|/|S_\alpha|$.
+    \ENDIF
+    \STATE $Z \gets Z \cup \textsc{BuildCoreset}(P_{\mathrm{mid}})$
+\ENDIF
+\STATE \textbf{return} $Z$
+\end{algorithmic}
+\end{algorithm}
 
 \subsubsection{Estimating Error via Sampling (Functions $G_1$, $G_2$, $F_\alpha$)}
 At each recursion level on a set $Q \subseteq P$, we draw a uniform sample $S$ of size $O\!\left(\frac{1}{\varepsilon^2}\log\frac{|Q|\,\ell}{\delta}\right)$ from $Q$, where $\ell = O(\log n)$ is the number of recursion levels. Define
@@ -824,122 +844,81 @@ By a standard concentration bound, $G$ satisfies condition~\eqref{eq:p2abs} for 
   \item $F_\alpha$, sampled from $P_\alpha$, approximates $\mathrm{err}_{P_\alpha}(h)$ and contributes its sampled points to $Z$.
 \end{itemize}
 
-Together, the target function for Problem~\ref{prob:two}, 
+Together, the target function for the problem in 1D is, 
 \[
 F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)
 \]
-where $F_{\mathrm{mid}}$ comes from recursion on $P_{\mathrm{mid}}$ satisfies both conditions of Problem~\ref{prob:two} for the full $P$.
+where $F_{\mathrm{mid}}$ comes from recursion on $P_{\mathrm{mid}}$ satisfies both conditions \ref{eq:p2abs} and \ref{eq:p2rel} for the full $P$.
 
 \medskip
-As there are $\ell$ levels, the overall cost is $O\!\left(\frac{\ell}{\epsilon^2} \log \frac{n}{\delta}\right) = O\!\left(\frac{\log n}{\epsilon^2} \cdot \log \frac{n}{\delta}\right)$, which lets us sovle Problem~\ref{prob:two} with a probability of at least $1 - \delta$.
-
-\subsubsection{Example (continued)}
-\begin{itemize}
-  \item Suppose at the top level we draw $S_1 = \{2, 5, 7\}$ from $P$, with labels $-1, +1, +1$.
-  \item For $h_{4.5}$ (optimal): $\mathrm{err}_{S_1}(h_{4.5}) = 0$, so $G_1(h_{4.5}) = 0$. True error is also $0$; condition~\eqref{eq:p2abs} holds trivially ($|0 - 0| = 0 \le 0.0625$).
-  \item For $h_{2.5}$: $\mathrm{err}_{S_1}(h_{2.5}) = 1$ (point 5 misclassified), so $G_1(h_{2.5}) = 8/3 \approx 2.67$. True error is $2$; the gap is $0.67$, well within the tolerance $\varepsilon|P|/64 = 0.0625 \cdot 8 = 0.5$... close to the boundary, illustrating why the sample size matters.
-\end{itemize}
-\noindent  
+As there are $\ell$ levels, the overall cost is $O\!\left(\frac{\ell}{\epsilon^2} \log \frac{n}{\delta}\right) = O\!\left(\frac{\log n}{\epsilon^2} \cdot \log \frac{n}{\delta}\right)$, which lets us solve the 1D problem with a probability of at least $1 - \delta$.
  
 \subsubsection{Splitting $P$ into Three Parts}
  
-The purpose of $G_1$ --- satisfying condition~\eqref{eq:p2abs} for the full $P$ --- is to identify where the error function transitions through the value $|P|/4$. Concretely, define:
+The purpose of $G_1$ is to identify where the error function transitions through the value $|P|/4$. Concretely, define:
 \begin{align*}
   \alpha &= \text{smallest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h^\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right),\\
   \beta &= \text{largest } \tau \in P \cup \{-\infty\} \text{ with } G_1(h^\tau) < |P|\!\left(\tfrac{1}{4} - \tfrac{\varepsilon}{64}\right).
 \end{align*}
 Because $G_1$ satisfies~\eqref{eq:p2abs}, any $h^\tau$ with $G_1(h^\tau)$ below this threshold has $\mathrm{err}_P(h^\tau) < |P|/4$. This splits $P$ into:
-\[
+$
   P_\alpha = \{p \in P : p = \alpha\}, \quad P_{\mathrm{mid}} = \{p \in P : \alpha < p \le \beta\}, \quad P_{\mathrm{rest}} = P \setminus (P_\alpha \cup P_{\mathrm{mid}}).
-\]
- 
-Crucially, classifiers $h^\tau$ with $\tau \notin [\alpha, \beta)$ have $\mathrm{err}_P(h^\tau) \ge |P|/4$, so condition~\eqref{eq:p2rel} for those classifiers follows from~\eqref{eq:p2abs} alone (with $\Delta = 0$). The recursive step only needs to handle $\tau \in [\alpha, \beta)$, where errors are small and the unknown $\Delta$ is needed.
- 
+$
+  
 \begin{proposition}[Size of $P_{\mathrm{mid}}$]\label{prop:midsize}
-  $|P_{\mathrm{mid}}| < |P|/2$.
+  $|P_{\mathrm{mid}}| < |P|/2$ $\rightarrow$ Recursion terminates in $O(\log n)$.
 \end{proposition}
  
 \begin{proof}
   If $\alpha = \beta = \mathrm{null}$, the claim is trivial. Otherwise, $P_{\mathrm{mid}}$ cannot contain $\ge |P|/4$ positive-label points (else $G_1(h_\beta) \ge |P|(1/4 - \varepsilon/64)$, contradicting the definition of $\beta$). By a symmetric argument, it cannot contain $\ge |P|/4$ negative-label points either. Hence $|P_{\mathrm{mid}}| < |P|/2$.
 \end{proof}
  
-Proposition~\ref{prop:midsize} guarantees the recursion terminates in $O(\log n)$ levels.
-\subsubsection{Example (continued)}
-With $|P| = 8$ and $\varepsilon = 1/2$, the threshold is $8(1/4 - 1/128) \approx 1.94$. Suppose $G_1$ evaluates to roughly:
- 
-\begin{center}
-\begin{tabular}{lcc}
-  \toprule
-  Classifier $h^\tau$ & True $\mathrm{err}_P(h^\tau)$ & $G_1(h^\tau)$ (approx.) \\
-  \midrule
-  $h_{-\infty}$ (all $+1$) & 4 & 4.0 \\
-  $h_{1}$ & 3 & 3.2 \\
-  $h_{2}$ & 2 & 2.1 \\
-  $h_{3}$ & 1 & 1.2 \\
-  $h_{4}$ & 0 & 0.1 \\
-  $h_{5}$ & 1 & 0.8 \\
-  $h_{6}$ & 2 & 2.2 \\
-  $h_{7}$ & 3 & 3.1 \\
-  $h_{8}$ (all $-1$) & 4 & 4.0 \\
-  \bottomrule
-\end{tabular}
-\end{center}
- 
-$G_1$ drops below 1.94 at $\tau = 3$ and $\tau = 4$. So $\alpha = 3$, $\beta = 4$, giving:
-\[
-  P_\alpha = \{3\}, \quad P_{\mathrm{mid}} = \{4\}, \quad P_{\mathrm{rest}} = \{1, 2, 5, 6, 7, 8\}.
-\]
-Note $|P_{\mathrm{mid}}| = 1 < 4 = |P|/2$, consistent with Proposition~\ref{prop:midsize}.
- 
 \subsubsection{Assembling the Coreset $Z$}
- 
-The coreset is assembled level by level:
-\begin{itemize}
+ \begin{itemize}
   \item A sample $S_2$ drawn from $P_{\mathrm{rest}}$ enters $Z$ with weight $|P_{\mathrm{rest}}|/|S_2|$.
   \item A sample $S_\alpha$ drawn from $P_\alpha$ enters $Z$ with weight $|P_\alpha|/|S_\alpha|$.
   \item The recursion on $P_{\mathrm{mid}}$ returns a sub-coreset $Z_{\mathrm{mid}}$, which is also included in $Z$.
 \end{itemize}
-Setting $F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)$ and $\Delta = \Delta_\alpha + \Delta_{\mathrm{mid}} + (G_2(h_\beta) - \mathrm{err}_{P_{\mathrm{rest}}}(h_\beta))$, one can verify (see Section~3 of the paper) that $F$ satisfies both conditions \eqref{eq:p2abs} and \eqref{eq:p2rel} of Problem~\ref{prob:two} for the full $P$. Since $\mathrm{w\text{-}err}_Z(h) = F(h)$, the coreset $Z$ realises the desired function $F$.
- 
-\begin{theorem}[Theorem 6 in the paper]\label{thm:coreset}
-  Let $n$ and $w$ be the size and width of the input $P$, respectively. In
-  \[
-    O\!\left(\frac{w}{\varepsilon^2}\,\log\!\frac{n}{w}\cdot\log\frac{n}{\delta}\right)
-  \]
-  probes, we can obtain with probability at least $1 - \delta$ a relative-comparison coreset $Z$ of $P$ with
-  \[
-    |Z| = O\!\left(\frac{w}{\varepsilon^2}\,\log\!\frac{n}{w}\cdot\log\frac{n}{\delta}\right).
-  \]
-\end{theorem}
- 
-\subsubsection{Example (continued)}
- At the top level, $S_2$ is drawn from $P_{\mathrm{rest}} = \{1,2,5,6,7,8\}$ (size 6) and $S_\alpha$ from $P_\alpha = \{3\}$ (size 1). The recursion on $P_{\mathrm{mid}} = \{4\}$ (size 1) trivially probes the single element. With weights assigned proportionally to the set sizes, $\mathrm{w\text{-}err}_Z$ correctly scales the sampled errors back to represent all of $P$.
+Setting $F(h) = G_2(h) + F_\alpha(h) + F_{\mathrm{mid}}(h)$ and $\Delta = \Delta_\alpha + \Delta_{\mathrm{mid}} + (G_2(h_\beta) - \mathrm{err}_{P_{\mathrm{rest}}}(h_\beta))$, one can verify that the resulting $F$ satisfies both \eqref{eq:p2abs}
+and \eqref{eq:p2rel} for $Q$, with $\Delta = \Delta_\alpha + \Delta_{\mathrm{mid}}
++ (G_2(h_\beta) - \mathrm{err}_{Q_{\mathrm{rest}}}(h_\beta))$.
  
 % ─────────────────────────────────────────────────────────────
 \subsection{Extension to Higher Dimensions}
- 
-For $d > 1$, the algorithm first computes a \textbf{chain decomposition} $C_1, \ldots, C_w$ of $P$ using Dilworth's Theorem --- the same decomposition used in the cost analysis of RPE (Section~2). Since each chain $C_i$ is ordered, it can be treated as a 1D instance.
- 
-Applying the 1D coreset construction to each $C_i$ independently yields sub-coresets $Z_1, \ldots, Z_w$. The final coreset is $Z = \bigcup_{i=1}^{w} Z_i$. For every $h \in \Hmon$:
+
+For $d > 1$, compute a chain decomposition $C_1, \ldots, C_w$ of $P$
+via Dilworth's Theorem (the same decomposition used in the RPE analysis).
+Apply the 1D construction independently to each chain, yielding
+sub-coresets $Z_1, \ldots, Z_w$.
+The final coreset $Z = \bigcup_i Z_i$ is valid because error decomposes
+additively over chains:
 \[
-  \mathrm{err}_P(h) = \sum_{i=1}^{w} \mathrm{err}_{C_i}(h), \qquad \mathrm{w\text{-}err}_Z(h) = \sum_{i=1}^{w} \mathrm{w\text{-}err}_{Z_i}(h).
+  \mathrm{err}_P(h) = \sum_{i=1}^{w} \mathrm{err}_{C_i}(h),
+  \qquad
+  \mathrm{w\text{-}err}_Z(h) = \sum_{i=1}^{w} \mathrm{w\text{-}err}_{Z_i}(h),
+  \qquad
+  \Delta = \sum_i \Delta_i.
 \]
-Since each $Z_i$ satisfies a per-chain relative bound with unknown shift $\Delta_i$, summing gives the global bound with $\Delta = \sum_i \Delta_i$.
  
 % ─────────────────────────────────────────────────────────────
-\subsection{Achieving the $(1+\varepsilon)$ Guarantee}
+\subsection{Main Results}
+
+\begin{theorem}[Theorem 6 in the paper]\label{thm:coreset}
+  Let $n$ and $w$ be the size and width of the input $P$, respectively. In
+  $ O\!\left(\frac{w}{\varepsilon^2}\,\log\!\frac{n}{w}\cdot\log\frac{n}{\delta}\right)
+  $
+  probes, we can obtain with probability at least $1 - \delta$ a relative-comparison coreset $Z$ of $P$ with
+  $
+    |Z| = O\!\left(\frac{w}{\varepsilon^2}\,\log\!\frac{n}{w}\cdot\log\frac{n}{\delta}\right).
+  $
+\end{theorem}
 
 Given the coreset $Z$, finding the best monotone classifier requires \emph{no further probing}: simply compute
-\[
-  \hat{h} = \arg\min_{h\in\Hmon}\mathrm{w\text{-}err}_Z(h),
-\]
-which can be done in time polynomial in $|Z|$ and $d$.
+$ \hat{h} = \arg\min_{h\in\Hmon}\mathrm{w\text{-}err}_Z(h),$ which can be done in time polynomial in $|Z|$ and $d$.
 
 \begin{corollary}[Corollary 7 in the paper]\label{cor:main}
   For Problem~1 with any $\varepsilon\in(0,1]$, there exists an algorithm that finds, with high probability, a monotone classifier with error at most $(1+\varepsilon)\kstar$ using
-  \[
-    O\!\left(\frac{w}{\varepsilon^2}\log\!\frac{n}{w}\cdot\log n\right)
-  \]
+  $ O\!\left(\frac{w}{\varepsilon^2}\log\!\frac{n}{w}\cdot\log n\right)$
   probes, where $n=|P|$, $w$ is the width of $P$, and $\kstar$ is the optimal monotone error.
 \end{corollary}
 
@@ -952,42 +931,114 @@ The argument is direct: for any $h\in\Hmon$, the coreset bound gives
 \]
 so setting $h=h^*$ (the true optimal) and rearranging yields $\mathrm{err}_P(\hat{h})\le(1+\varepsilon)\kstar$.
 
+% ─────────────────────────────────────────────────────────────
+\subsection{Example}\label{sec:rcc-example}
+% ─────────────────────────────────────────────────────────────
+
+Let $P = \{1,\ldots,8\}$ with $\ell(p)=-1$ for $p\le 4$ and $\ell(p)=+1$ for $p\ge 5$,
+$\varepsilon=\tfrac{1}{2}$. Classifiers have the form $h^\tau(p)=+1$ iff $p>\tau$;
+the optimal is $h^4$ with $\kstar=0$.
+
+%--- Level 1 --------------------------------------------------
+\subsubsection*{Level 1: \textsc{BuildCoreset}($P$)}
+
+Draw $S_1=\{2,5,7\}$, scaling factor $|P|/|S_1|=8/3$.
+Threshold: $|P|(1/4-\varepsilon/64)=8\times 31/128\approx 1.94$.
+
+\smallskip
+\begin{center}\small
+\begin{tabular}{lcccc}
+\hline
+$h^\tau$ & $\mathrm{err}_P$ & $\mathrm{err}_{S_1}$ & $G_1=\tfrac{8}{3}\cdot\mathrm{err}_{S_1}$ & $G_1<1.94$? \\
+\hline
+$h^{\mathrm{pos}}$ & 4 & 1 & 2.67 & No \\
+$h^1$ & 3 & 1 & 2.67 & No \\
+$h^2$ & 2 & 0 & 0 & \textbf{Yes} \\
+$h^3$ & 1 & 0 & 0 & \textbf{Yes} \\
+$h^4$ & 0 & 0 & 0 & \textbf{Yes} \\
+$h^5$ & 1 & 1 & 2.67 & No \\
+$h^6$ & 2 & 2 & 5.33 & No \\
+$h^7$ & 3 & 2 & 5.33 & No \\
+$h^8$ & 4 & 2 & 5.33 & No \\
+\hline
+\end{tabular}
+\end{center}
+
+\smallskip\noindent
+$\alpha=2$, $\beta=4$, giving partition
+$P_\alpha=\{2\}$, $P_{\mathrm{mid}}=\{3,4\}$, $P_{\mathrm{rest}}=\{1,5,6,7,8\}$
+($|P_{\mathrm{mid}}|=2<4$\,\checkmark).
+Sample $S_2=\{6,7\}$ from $P_{\mathrm{rest}}$ with weight $5/2$;
+sample $S_\alpha=\{2\}$ from $P_\alpha$ with weight $1$.
+Recurse on $P_{\mathrm{mid}}$.
+
+%--- Level 2 --------------------------------------------------
+\subsubsection*{Level 2: \textsc{BuildCoreset}($P_{\mathrm{mid}}$)}
+
+$P_{\mathrm{mid}}=\{3,4\}$ (both labelled $-1$).
+Draw $S_1=\{4\}$, scaling factor $2/1=2$.
+Threshold: $2\times 31/128\approx 0.484$.
+
+\smallskip
+\begin{center}\small
+\begin{tabular}{lcccc}
+\hline
+$h^\tau$ & $\mathrm{err}_{P_{\mathrm{mid}}}$ & $\mathrm{err}_{S_1}$ & $G_1=2\cdot\mathrm{err}_{S_1}$ & $G_1<0.484$? \\
+\hline
+$h^2$ & 2 & 1 & 2 & No \\
+$h^3$ & 1 & 1 & 2 & No \\
+$h^4$ & 0 & 0 & 0 & \textbf{Yes} \\
+\hline
+\end{tabular}
+\end{center}
+
+\smallskip\noindent
+$\alpha=\beta=4$, giving $P_\alpha=\{4\}$, $P_{\mathrm{mid}}'=\emptyset$,
+$P_{\mathrm{rest}}=\{3\}$.
+Both subsets are singletons: $S_2=\{3\}$ and $S_\alpha=\{4\}$, each with weight $1$.
+Recursion terminates ($P_{\mathrm{mid}}'=\emptyset$).
+
+\subsubsection*{Final Coreset $Z$ and Weighted Error}
+
+\begin{center}
+\begin{minipage}{0.48\textwidth}
+\centering\small
+\begin{tabular}{ccc}
+\hline
+Point & Label & Weight\\
+\hline
+2 & $-1$ & $1$   \\
+3 & $-1$ & $1$    \\
+4 & $-1$ & $1$    \\
+6 & $+1$ & $5/2$ \\
+7 & $+1$ & $5/2$\\
+\hline
+\multicolumn{2}{l}{Total} & $1+1+1+\tfrac{5}{2}+\tfrac{5}{2}=8=|P|$ & \checkmark \\
+\hline
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\centering\small
+\begin{tabular}{cc||cc}
+\hline
+$h^\tau$ & $\mathrm{w\text{-}err}_Z$ & $h^\tau$ & $\mathrm{w\text{-}err}_Z$ \\
+\hline
+$h^{\mathrm{pos}}$ & 3    & $h^5$ & 0 \\
+$h^1$              & 3    & $h^6$ & $5/2$ \\
+$h^2$              & 2    & $h^7$ & $5/2$ \\
+$h^3$              & 1    & $h^{\mathrm{neg}}$ & 5 \\
+$h^4$              & $\mathbf{0}$ & & \\
+\hline
+\end{tabular}
+\end{minipage}
+\end{center}
+
 \medskip
-\subsubsection{Example (conclusion)} We compute $\mathrm{w\text{-}err}_Z(h^\tau)$ for each threshold $\tau$. The minimiser is $h_{4.5}$ (equivalently $h_4$), with weighted error $\approx0$. Since $\kstar=0$, the $(1+\varepsilon)\kstar=0$ bound is met exactly.
-  
-\subsection{Full Algorithmic Description}
-\begin{algorithm}
-\caption{BuildCoreset($P$)}
-\begin{algorithmic}[1]
-\STATE $Z \gets \emptyset$
-\IF{$|P| = 1$}
-    \STATE Probe the (only) element $p \in P$
-    \STATE $Z \gets \{p\}$ with $\text{weight}(p) = 1$
-\ELSE
-    \STATE Probe sample $S_1$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P$
-    \STATE \COMMENT{Defines $G_1(h) = (|P|/|S_1|)\cdot \mathrm{err}_{S_1}(h)$; use $G_1$ to find $\alpha, \beta$ and split $P$ into $P_\alpha, P_{\text{mid}}, P_{\text{rest}}$}
+\noindent
+$h^4$ (and $h^5$) minimise $\mathrm{w\text{-}err}_Z$, correctly recovering $h^* = h^4$.
 
-    \IF{$P_{\text{rest}} \neq \emptyset$}
-        \STATE Probe sample $S_2$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P_{\text{rest}}$
-        \STATE \COMMENT{Defines $G_2(h) = (|P_{\text{rest}}|/|S_2|)\cdot \mathrm{err}_{S_2}(h)$}
-        \STATE Add $S_2$ to $Z$ with $\text{weight}(p) = |P_{\text{rest}}|/|S_2|$ for each $p \in S_2$
-    \ENDIF
 
-    \IF{$P_\alpha \neq \emptyset$}
-        \STATE Probe sample $S_\alpha$ of size $O\!\left(\frac{1}{\varepsilon^2} \log\left(\frac{|P|\ell}{\delta}\right)\right)$ from $P_\alpha$
-        \STATE \COMMENT{Defines $F_\alpha(h) = (|P_\alpha|/|S_\alpha|)\cdot \mathrm{err}_{S_\alpha}(h)$}
-        \STATE Add $S_\alpha$ to $Z$ with $\text{weight}(p) = |P_\alpha|/|S_\alpha|$ for each $p \in S_\alpha$
-    \ENDIF
-
-    \STATE $Z_{\text{mid}} \gets \textsc{BuildCoreset}(P_{\text{mid}})$
-    \STATE Add $Z_{\text{mid}}$ to $Z$
-\ENDIF
-
-\STATE \textbf{return} $Z$
-\end{algorithmic}
-\end{algorithm}
-
-\newpage
 % ============================================================
 \section{Proofs and Lower Bounds}
 % ============================================================
