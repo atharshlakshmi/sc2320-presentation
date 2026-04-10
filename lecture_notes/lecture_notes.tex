@@ -1118,9 +1118,6 @@ This gives $n/2$ choices for the anomaly pair and $2$ choices for its type, yiel
   In every case, $h^\tau$ is suboptimal on at least one of $P_{-1}(i)$ or $P_{+1}(i)$.
 \end{proof}
 
-\begin{remark}[Intuition]
-  The anomaly pair determines whether the optimal classifier should ``cut'' to the left or right of that pair. Without identifying which pair is anomalous \emph{and} what type it is, the algorithm cannot determine the correct cut point.
-\end{remark}
 
 \subsubsection{The Counting Argument (Lemma 11)}
 
@@ -1187,15 +1184,6 @@ A deterministic algorithm $A_\mathrm{det}$ (with free labels) probes pairs in a 
   If algorithm $A$ finds an optimal classifier with probability $> 2/3$ on \emph{every} input, then $\mathrm{family\text{-}err}(A) < |\mathcal{P}|/3 = n/3$. By Corollary~\ref{cor:randomized-lb}, $\E[\mathrm{family\text{-}cost}(A)] = \Omega(n^2)$. Since $|\mathcal{P}| = n$, by an averaging argument at least one input in $\mathcal{P}$ requires $\Omega(n)$ expected probes.
 \end{remark}
 
-\begin{remark}[Yao's Minimax Theorem]
-  The proof technique follows a standard pattern in computational complexity:
-  \begin{enumerate}
-    \item Construct a hard family of inputs.
-    \item Prove a lower bound on deterministic algorithms averaged over this family.
-    \item Apply Yao's minimax theorem: any randomized algorithm that succeeds on all inputs with high probability must also incur high cost on the hard family.
-  \end{enumerate}
-  This is a game-theoretic argument --- the ``adversary'' (who picks the input) and the ``algorithm'' (who picks the probing strategy) cannot both win cheaply.
-\end{remark}
 
 % ─────────────────────────────────────────────────────────────
 \subsection{Lower Bound for Constant Approximation Ratios}\label{sec:lb-constant}
@@ -1259,15 +1247,6 @@ The key insight is the following:
 
 Since the algorithm must correctly classify all non-dummy points, it effectively solves the realizable problem on the original $P'$. Therefore, the $\Omega(w' \cdot \mathrm{Log}\,\frac{n'}{w'})$ lower bound from Stage 1 carries over.
 
-\begin{example}
-  Consider $w' = 3$ boxes with $n'/w' = 4$ points each ($n' = 12$), and $k = 2, c = 3$.
-  \begin{itemize}
-    \item Each gap between consecutive points gets $2ck = 12$ dummy points.
-    \item A dummy box gets $2k = 4$ points (top 2 labelled $-1$, bottom 2 labelled $+1$).
-    \item Total: $n = 12 + 4 + 2 \cdot 3 \cdot 2 \cdot 12 = 12 + 4 + 144 = 160$.
-    \item If the algorithm misclassifies any original point $p$, it also misclassifies $\ge ck = 6$ dummy neighbours, so $\mathrm{err} \ge 7 > ck = 6$. Thus $p$ must be classified correctly.
-  \end{itemize}
-\end{example}
 
 % ─────────────────────────────────────────────────────────────
 \subsection{Lower Bound for Arbitrary $\varepsilon$}\label{sec:lb-arbitrary}
@@ -1277,10 +1256,6 @@ The previous lower bounds address the exact case and constant approximation rati
 \begin{theorem}[Theorem 14 in the paper]\label{thm:lb-arbitrary}
   Let $0 < \varepsilon \le 1/10$. Fix integers $n \ge 1$ and $w \ge 1$ such that $n$ is a multiple of $w$ and $n \ge \frac{w \ln n}{\varepsilon^2}$. Any algorithm for Problem~\ref{prob:main} under $d = 2$ that guarantees expected error $(1+\varepsilon)\kstar$ must probe $\Omega(w/\varepsilon^2)$ elements in expectation on at least one input with width $w$.
 \end{theorem}
-
-\begin{remark}
-  This is arguably the most technically demanding result in the paper. The proof uses techniques from \emph{hypothesis testing} --- specifically, the difficulty of distinguishing two slightly different coin biases from a limited number of samples.
-\end{remark}
 
 \subsubsection{The Hard Input}
 
@@ -1386,9 +1361,6 @@ The optimal error is $\kstar \le n(1/2 - \gamma/4)$, so the expected approximati
 
 By Lemma~\ref{lem:rp-equiv}, $\E[R_1] = \E[R_2] > 1 + \varepsilon$, meaning the algorithm with budget $\le wM/8 = \Theta(w/\varepsilon^2)$ cannot guarantee expected error $(1+\varepsilon)\kstar$.
 
-\begin{remark}[The role of the Chernoff bound]
-  The proof also uses a Chernoff bound (Lemma 20 in the paper) to show that, with high probability, the labelled set $P$ is ``intended'' --- meaning each location has close to the expected number of majority-label points. This ensures that $\kstar$ is well-behaved and the excess error from wrong guesses is reliably large.
-\end{remark}
 
 % ─────────────────────────────────────────────────────────────
 \subsection{Near-Optimality of the Algorithms}\label{sec:near-optimality}
@@ -1427,70 +1399,6 @@ Several conclusions emerge:
   The paper concludes that the true complexity of Problem~\ref{prob:main} is $\Theta(w/\varepsilon^2)$ up to polylogarithmic factors. This is a strong characterization: regardless of the input distribution, dimensionality, or value of $\kstar$, the cost is essentially determined by $w$ and $\varepsilon$ alone.
 \end{remark}
 
-% ─────────────────────────────────────────────────────────────
-\subsection{Mathematical Machinery (Supplementary)}\label{sec:math-machinery}
-
-This section collects the key mathematical tools used in the lower bound proofs. These are not specific to monotone classification --- they are general-purpose techniques from combinatorics, probability, and learning theory.
-
-\subsubsection{Concentration Bounds (Chernoff Bounds)}
-
-Chernoff bounds quantify how closely the average of independent random variables approximates its expectation. They are used throughout the paper for sample-based estimation.
-
-\begin{lemma}[Chernoff bounds]
-  Let $X_1, \ldots, X_t$ be independent Bernoulli random variables with $\Pr[X_i = 1] = \mu$.
-  \begin{itemize}
-    \item \textbf{Multiplicative form:} For any $\gamma \in (0, 1]$:
-    \[
-      \Pr\!\left[\left|\mu - \frac{1}{t}\sum_{i=1}^t X_i\right| \ge \gamma\mu\right] \;\le\; 2\exp\!\left(-\frac{\gamma^2 t\mu}{3}\right).
-    \]
-    \item \textbf{Upper tail:} For any $\gamma \ge 0$:
-    \[
-      \Pr\!\left[\frac{1}{t}\sum_{i=1}^t X_i \ge (1+\gamma)\mu\right] \;\le\; \exp\!\left(-\frac{\gamma^2}{2+\gamma} \cdot t\mu\right).
-    \]
-  \end{itemize}
-\end{lemma}
-
-\begin{remark}[Application in this paper]
-  Chernoff bounds are used in two ways:
-  \begin{enumerate}
-    \item \textbf{Coreset construction} (Section~3): to ensure that $G_1, G_2, F_\alpha$ approximate the true error with high probability. The sample size $O(1/\varepsilon^2 \cdot \log(n/\delta))$ comes directly from inverting the Chernoff bound.
-    \item \textbf{Lower bound for arbitrary $\varepsilon$} (Theorem~\ref{thm:lb-arbitrary}): to show that the labelled set is ``intended'' with high probability (Lemma 20 in the paper).
-  \end{enumerate}
-\end{remark}
-
-\subsubsection{Yao's Minimax Theorem}
-
-\begin{theorem}[Yao's Minimax Theorem]
-  Let $\mathcal{P}$ be a distribution over inputs. If every deterministic algorithm has expected cost at least $C$ on inputs drawn from $\mathcal{P}$, then every randomized algorithm has expected cost at least $C$ on some (worst-case) input.
-\end{theorem}
-
-\begin{remark}
-  Yao's theorem converts an \emph{average-case lower bound for deterministic algorithms} into a \emph{worst-case lower bound for randomized algorithms}. It is a fundamental tool in complexity theory, used here in both the $\varepsilon = 0$ proof (Theorem~\ref{thm:lb-exact}) and the constant-ratio proof (Theorem~\ref{thm:lb-constant}).
-\end{remark}
-
-\subsubsection{VC-Dimension and Related Quantities}
-
-The paper proves in Appendix~B that several standard complexity measures of the hypothesis class $\Hmon$ are all $\Omega(w)$:
-
-\begin{definition}[VC-dimension]
-  The \textbf{VC-dimension} $\lambda$ of $\Hmon$ on $P$ is the size of the largest subset $S \subseteq P$ that can be \emph{shattered} by $\Hmon$: for every labelling $f : S \to \{-1, +1\}$, there exists $h \in \Hmon$ with $h(p) = f(p)$ for all $p \in S$.
-\end{definition}
-
-\begin{proposition}[VC-dimension lower bound]
-  The VC-dimension of $\Hmon$ on $P$ is at least $w$ (the width of $P$).
-\end{proposition}
-
-\begin{proof}
-  Let $p_1, \ldots, p_w$ be $w$ pairwise incomparable points in $P$ (guaranteed by Dilworth's theorem). For any labelling $f$, define $h \in \Hmon$ by: if $f(p_i) = +1$, set $h(q) = +1$ for all $q \succeq p_i$; if $f(p_i) = -1$, set $h(q) = -1$ for all $q \preceq p_i$. Since the $p_i$ are pairwise incomparable, these constraints are consistent, so $\{p_1, \ldots, p_w\}$ is shattered.
-\end{proof}
-
-The paper similarly shows that the \textbf{disagreement coefficient} $\theta$, the \textbf{star number} $s$, and the \textbf{teaching dimension} $\chi$ of $\Hmon$ are all $\Omega(w)$ in the worst case. This is significant because:
-\begin{itemize}
-  \item Existing active learning algorithms have costs that depend on these quantities (see bounds (5) and (6) in Section 1.3 of the paper).
-  \item Since all four measures are $\Omega(w)$, the best cost achievable by prior methods is at least $\Omega(w^2/\varepsilon^2)$ or $\Omega(w + n \cdot w / (\varepsilon \kstar))$, which is \emph{worse} than the $O(w/\varepsilon^2 \cdot \mathrm{Log}(n/w) \cdot \log n)$ achieved by the coreset algorithm.
-\end{itemize}
-
-This establishes that the algorithms in this paper strictly improve over the state of the art in active learning for monotone classification.
 
 \newpage
 
