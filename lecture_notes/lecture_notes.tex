@@ -398,7 +398,8 @@ $$p \succ q \implies h(p) \geq h(q)$$
 Intuitively, if a pair $p$ is at least as similar as $q$ on every attribute, it would be contradictory for $h$ to label $p$ as a non-match $(-1)$ while labeling $q$ as a match $(+1)$. A more similar pair should receive at least as positive a label. We denote the set of all monotone classifiers as $\mathbb{H}_{mon}$. So for entity matching, the key criteria of our classifier is that it must be \textbf{monotone}.
 
 \subsubsection{The Importance of Monotonicity}
-Remember that similarity scores are constructed in a way that higher values would indicate greater similarity for each attribute. If a pair $p$ has similarity scores higher than or equal to pair $q$ on all attributes, thereby making $p$ dominate $q$, it would be in direct contradiction of the aforementioned logic of greater similarity should a classifier label $p$ as a non-match while $q$ as a match. Furthermore, considering that labels would ultimately be drawn from a human, this would be seen as a completely unreasonable verdict that no logically sound human validator would intuitively conclude. Thus, any classifier that violates the monotonicity constraint should not be used.
+Remember that similarity scores are constructed in a way that higher values would indicate greater similarity for each attribute. If a pair $p$ has similarity scores higher than or equal to pair $q$ on all attributes, thereby making $p$ dominate $q$, it would be in direct contradiction of the aforementioned logic of greater similarity should a classifier label $p$ as a non-match while $q$ as a match. It's like saying: "the less similar pair is a match, the more similar pair is not.". Thus, any classifier that violates the monotonicity constraint should not be used.
+% Furthermore, considering that labels would ultimately be drawn from a human, this would be seen as a completely unreasonable verdict that no logically sound human validator would intuitively conclude.
 
 \subsubsection{The Optimal Monotone Error}
 Given a classifier $h$, its \textbf{error} on $P$ is defined as the number of points it misclassifies:
@@ -447,12 +448,12 @@ When data is not linearly separable, the Perceptron fails to converge --- motiva
 A classification problem is \textbf{non-realizable} if no classifier $h \in \mathbb{H}_{mon}$ can achieve zero error on $P$, i.e., $k^* > 0$. This arises when the labels in $P$ contain noise --- points that violate monotonicity regardless of which classifier is chosen. This is analogous to the non-linearly separable case in SC2300.
 \end{remark}
 
-\begin{remark}
-Just as hinge loss introduces a tolerance for misclassified 
-points in the non-separable case, this paper introduces 
-$(1+\epsilon)k^*$ as a multiplicative tolerance for the 
-non-realizable case --- same philosophy, different context.
-\end{remark}
+% \begin{remark}
+% Just as hinge loss introduces a tolerance for misclassified 
+% points in the non-separable case, this paper introduces 
+% $(1+\epsilon)k^*$ as a multiplicative tolerance for the 
+% non-realizable case
+% \end{remark}
 
 In the context of Entity Matching, the non-realizable case is the norm. Furthermore, unlike the Perceptron, labels are \textbf{not} visible from the start --- they are hidden and can only be revealed through probing. This is where \textbf{Active Classification} comes in. Devise a learning strategy where the algorithm selectively chooses which points to probe rather than requiring all labels upfront, gathering just enough evidence to construct a classifier with error at most $(1+\epsilon)k^*$ while minimizing the number of probes. In other words, Active Classification takes into account cost apart from just accuracy. 
 
