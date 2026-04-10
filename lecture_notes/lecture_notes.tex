@@ -185,27 +185,24 @@ It will also go in the same flow as the presentation slides.
 Concepts/Material/Information that is auxiliary to the core ideas of this paper will be outlined at the end of each section.
 
 % ============================================================
-\section*{Acronym Reference}
+% \section*{Acronym Reference}
 % ============================================================
 
-\begin{table}[ht]
-  \centering
-  \begin{tabular}{ll}
-    \toprule
-    \textbf{Acronym} & \textbf{Full Form} \\
-    \midrule
-    ER & Entity Resoluton \\
-    EM & Entity Matching \\
-    ACR3 & Acronym Three \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+% \begin{table}[ht]
+%   \centering
+%   \begin{tabular}{ll}
+%     \toprule
+%     \textbf{Acronym} & \textbf{Full Form} \\
+%     \midrule
+%     ER & Entity Resoluton \\
+%     EM & Entity Matching \\
+%     ACR3 & Acronym Three \\
+%     \bottomrule
+%   \end{tabular}
+% \end{table}
 
 % \tableofcontents
 
-
-
-\newpage
 
 % ============================================================
 % COPY-PASTE ENVIRONMENT TEMPLATES
@@ -304,7 +301,7 @@ Concepts/Material/Information that is auxiliary to the core ideas of this paper 
   Given two sets of entities  $E_1$  and $E_2$, the task is to determine, for every pair $(e_1, e_2) \in E_1 \times E_2$, whether $e_1$ and $e_2$ refer to the same real-world entity. It is a binary classification task that determines whether a candidate pair is a match $(+1)$ or non-match $(-1)$ \cite{tao21}.
 \end{definition}
 
-To motivate the problem, consider the following scenario where we have two sets of \texttt{entities} that we refer to here as product listings - $E_1$ and $E_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada respectively. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. The goal of Entity Matching in this scenario is to decide, for every pair $(e_1, e_2) \in E_1 \times E_2$, if they are referring to the same real-world product. 
+To motivate the problem, consider the following scenario where we have two sets of \texttt{entities} that we refer to here as product listings - $E_1$ and $E_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada respectively. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{price}. The goal of Entity Matching in this scenario is to decide, for every pair $(e_1, e_2) \in E_1 \times E_2$, if they are referring to the same real-world product. 
 
 What makes this non-trivial is that even a genuinely matching pair may disagree on attribute values. For instance, one platform may list a product as \textit{``Sony WH-1000XM5''} while another lists it as \textit{``Sony Noise Cancelling Headphones XM5 Series''}. They are referring to the same product but with different representations. It is therefore insufficient to rely solely on attribute-level comparison to determine a match. To attain maximum accuracy in entity matching, it falls upon a human expert to manually inspect each pair and make a verdict. However, with thousands of listings on each platform, the number of pairs in $E_1 \times E_2$ grows quadratically - making manual inspection labor intensive and expensive. This motivates the need for a more systematic and efficient approach to Entity Matching.
 % \subsubsection{}
@@ -327,7 +324,7 @@ To address the Entity Matching Problem, we transform it into a classification pr
 As mentioned earlier in 1.1, the two entity sets $E_1$ and $E_2$ can grow quadratically, making it computationally infeasible to compare every pair. The goal of blocking is to narrow the search space down to a smaller candidate subset $S \subseteq E_1 \times E_2$, retaining only pairs that are plausible matches based on an application-dependent heuristic.
 
 Going back to the Shopee-Lazada example, one may restrict $S$ to only those pairs $(e_1, e_2)$ where \texttt{p-year} agrees across both listings. Note that blocking is optional --- if skipped, $S = E_1 \times E_2$.
-\newpage
+
 \begin{remark}[Application-Dependent Heuristic]
 
 \begin{sloppypar}
@@ -348,10 +345,10 @@ The criterion used for blocking is \textbf{application-dependent}; there is no u
 \subsubsection{Comparison}
 For each remaining pair $(e_1, e_2) \in S$, the comparison step quantifies their similarity across $d$ attributes using a set of similarity functions $sim_1, sim_2, \ldots, sim_d$. The $i$-th coordinate of the resulting point $p_{e_1,e_2}$ equals $sim_i(e_1, e_2)$, where a higher value indicates greater similarity on that attribute. The choice of similarity function depends on the attribute type:
 \begin{itemize}
-  \item For numerical attributes such as \texttt{p-price}, one may use $-|e_1.\texttt{price} - e_2.\texttt{price}|$, where the negation ensures consistency with the convention that higher values reflect greater similarity. 
+  \item For numerical attributes such as \texttt{price}, one may use $-|e_1.\texttt{price} - e_2.\texttt{price}|$, where the negation ensures consistency with the convention that higher values reflect greater similarity. 
   \item For text attributes such as \texttt{p-name} and \texttt{p-description}, functions such as edit distance, Jaccard similarity, or cosine similarity may be employed. 
 \end{itemize}
-
+\newpage
 \begin{example}
   Consider an entity pair $(e_1, e_2) \in S$. $e_1$ is a Shopee listing and $e_2$ is a Lazada listing for what may be the same product. Suppose each entity has the attributes \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{p-price}. We pass each attribute pair into a pre-defined similarity function as follows:
   \begin{itemize}
@@ -361,7 +358,7 @@ For each remaining pair $(e_1, e_2) \in S$, the comparison step quantifies their
     
     \item \texttt{p-year}: a numerical attribute --- use exact match, returning 1 if equal and 0 otherwise. $\rightarrow$ $sim_3(e_1, e_2) = 1$
     
-    \item \texttt{p-price}: a numerical attribute --- use $-|e_1.\texttt{price} - e_2.\texttt{price}|$. E.g., \$350 vs \$345 $\rightarrow$ $sim_4(e_1, e_2) = -5$
+    \item \texttt{price}: a numerical attribute --- use $-|e_1.\texttt{price} - e_2.\texttt{price}|$. E.g., \$350 vs \$345 $\rightarrow$ $sim_4(e_1, e_2) = -5$
   \end{itemize}
 
   The resulting point representing this pair in $\mathbb{R}^4$ is: $$p_{e_1, e_2} = (0.8,\ 0.65,\ 1,\ -5)$$
@@ -380,7 +377,7 @@ Instead of relying on human judgement, we want to find a classifier to correctly
 
 The input is the set $P$ of $n$ points in $\R^{d}$ for $d \geq 1$ that we obtained from the Comparison step. Each point $p \in P$ holds a label from $\{-1, 1\}$ which is represented as $label(p)$.
 
-We first define a classifier as a function:
+We then define a classifier as a function:
 $$ h : \R^{d} \rightarrow \{-1, +1\}$$
 
 where $h(p) = label(p)$ is a correct classification made by $h$ and will be a misclassification otherwise.
@@ -400,6 +397,9 @@ This supports the \textbf{Monotonicity Constraint}. A classifier $h$ is said to 
 $$p \succ q \implies h(p) \geq h(q)$$
 Intuitively, if a pair $p$ is at least as similar as $q$ on every attribute, it would be contradictory for $h$ to label $p$ as a non-match $(-1)$ while labeling $q$ as a match $(+1)$. A more similar pair should receive at least as positive a label. We denote the set of all monotone classifiers as $\mathbb{H}_{mon}$. So for entity matching, the key criteria of our classifier is that it must be \textbf{monotone}.
 
+\subsubsection{The Importance of Monotonicity}
+Remember that similarity scores are constructed in a way that higher values would indicate greater similarity for each attribute. If a pair $p$ has similarity scores higher than or equal to pair $q$ on all attributes, thereby making $p$ dominate $q$, it would be in direct contradiction of the aforementioned logic of greater similarity should a classifier label $p$ as a non-match while $q$ as a match. Furthermore, considering that labels would ultimately be drawn from a human, this would be seen as a completely unreasonable verdict that no logically sound human validator would intuitively conclude. Thus, any classifier that violates the monotonicity constraint should not be used.
+
 \subsubsection{The Optimal Monotone Error}
 Given a classifier $h$, its \textbf{error} on $P$ is defined as the number of points it misclassifies:
 
@@ -413,16 +413,14 @@ Note that $k^*$ need not be zero --- in practice, the labels in $P$ may not perf
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.5\textwidth]{../classification_example.png}
-  \caption{Labelling of input set $P$ by monotone classifier $h$}
+  \includegraphics[width=0.46\textwidth]{../classification_example.png}
+  \caption{Input set $P$}
   \label{fig:classification-example}
 \end{figure}
 \begin{example}
-  Consider the 2D point set $P$ illustrated in Figure 2 taken from Professor Tao's original paper \cite{tao21}. Each point $p_{e_1,e_2} \in P$ represents an entity pair with $d = 2$ similarity features. Black points carry label $+1$ (match) and white points carry label $-1$ (non-match).
-
-  The monotone classifier $h$ that maps all black points to $+1$ except $p_1$, and all white points to $-1$ except $p_{11}$ and $p_{15}$, achieves $err_P(h) = 3$. No other monotone classifier does better on $P$, and hence $k^* = 3$. Note that $k^* > 0$ --- this is the non-realizable case, as no monotone classifier can perfectly separate all points in $P$.
+  Consider the 2D point set $P$ illustrated in Figure 2. Each point $p_{e_1,e_2} \in P$ represents an entity pair with $d = 2$ similarity features. Black points carry label $+1$ (match) and white points carry label $-1$ (non-match).
+  A monotone classifier $h$ that maps all black points to $+1$ except $p_1$, and all white points to $-1$ except $p_{11}$ and $p_{15}$, achieves $err_P(h) = 3$. No other monotone classifier does better on $P$, and hence $k^* = 3$. Note that $k^* > 0$ --- this is the non-realizable case, as no monotone classifier can perfectly separate all points in $P$.
 \end{example}
-
 
 We now want an algorithm $\mathcal{A}$ to find a classifier from $\mathbb{H}_{mon}$ with low error on $P$. Note that in the beginning, the labels on all points in $P$ are hidden. In order for $\mathcal{A}$ to gain better understanding in forming an optimal classifier, it is allowed to query an \emph{oracle} --- a human expert in practice -- to reveal the ground truth label of a chosen point $p \in P$. This action is defined as a \emph{probe}. To assess the efficiency of the $\mathcal{A}$, we can measure its cost by the number of \emph{probes} it makes.
 
@@ -436,7 +434,7 @@ Given a real value $\epsilon \geq 0$, find a monotone classifier $h \in \mathbb{
 
 Note that when $\epsilon = 0$, the algorithm must find an exactly optimal classifier, which as we will see requires $\Omega(n)$ probes in the worst case --- essentially probing all of $P$. This justifies the introduction of $\epsilon > 0$, where even a small tolerance dramatically reduces the probing cost. The remainder of this paper studies how efficiently this problem can be solved across the full range of $\epsilon$.
 
-\subsection{Active Classification (Supplementary)}
+\subsection{Active Classification and Learning}
 To motivate Active Classification, we first revisit a familiar example of \textbf{passive classification} --- the \textbf{Perceptron Algorithm}, covered in SC2300 Machine Learning. Recall that the Perceptron is a mistake-driven algorithm that iterates through all training examples $S_n = \{(x^{(t)}, y^{(t)}), t = 1, \ldots, n\}$, where both the points \textit{and} their labels are fully visible from the start. It updates its parameter vector $\theta$ whenever a misclassification occurs, converging to a linear classifier that correctly separates all training examples --- provided they are linearly separable. This is the \textbf{realizable case}.
 
 \begin{remark}[Realizable Case]
@@ -476,7 +474,11 @@ Goal & Zero training error & $(1+\epsilon)k^*$ error \\
 \caption{Passive vs.\ Active Classification}
 \end{table}
 
-A key limitation of existing active learning approaches is that they require prior knowledge of $k^*$ --- the optimal monotone error --- before the algorithm even begins. This is an unrealistic assumption in practice, since $k^*$ can only be determined after all labels are revealed. This paper proposes algorithms that require no such prior knowledge, working instead by strategically probing points to implicitly converge towards a $(1+\epsilon)$-approximate solution --- which we examine in the sections that follow.
+\subsubsection{Why Monotone Classifiers are suitable for Active Learning}
+Monotone classification is particularly well-suited to this setting because it allows label propagation at no extra cost: if an oracle confirms that a pair $p$ is a match ($+1$), then any pair $q$ that is dominated by $p$ (i.e., $q \preceq p$) cannot be a better match — so a monotone classifier must assign $q$ a label $\leq +1$, meaning it is already constrained. Symmetrically, a confirmed non-match ($-1$) propagates upward. This means a single probe can resolve the labels of many other points for free, making monotone classification a natural and efficient framework for active learning in entity matching.
+
+\subsubsection{A Key Limitation of Active Classification}
+Existing active learning approaches require prior knowledge of $k^*$ --- the optimal monotone error --- before the algorithm even begins. This is an unrealistic assumption in practice, since $k^*$ can only be determined after all labels are revealed. This paper proposes algorithms that require no such prior knowledge, working instead by strategically probing points to implicitly converge towards a $(1+\epsilon)$-approximate solution --- which we examine in the sections that follow.
 
 % ============================================================
 \section{RPE Algorithm}
@@ -1013,7 +1015,7 @@ Point & Label & Weight\\
 6 & $+1$ & $5/2$ \\
 7 & $+1$ & $5/2$\\
 \hline
-\multicolumn{2}{l}{Total} & $1+1+1+\tfrac{5}{2}+\tfrac{5}{2}=8=|P|$ & \checkmark \\
+\multicolumn{2}{l}{Total} & $1+1+1+\tfrac{5}{2}+\tfrac{5}{2}=8=|P|\ \checkmark$ \\
 \hline
 \end{tabular}
 \end{minipage}
