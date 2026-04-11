@@ -36,8 +36,8 @@
   backgroundcolor = defblue,
   linecolor       = rulecol,
   linewidth       = 1pt,
-  innertopmargin  = 6pt,
-  innerbottommargin = 6pt,
+  innertopmargin  = 3pt,
+  innerbottommargin = 3pt,
   innerleftmargin = 8pt,
   innerrightmargin = 8pt,
   skipabove       = 8pt,
@@ -48,8 +48,8 @@
   backgroundcolor = thmgreen,
   linecolor       = rulecol,
   linewidth       = 1pt,
-  innertopmargin  = 6pt,
-  innerbottommargin = 6pt,
+  innertopmargin  = 3pt,
+  innerbottommargin = 3pt,
   innerleftmargin = 8pt,
   innerrightmargin = 8pt,
   skipabove       = 8pt,
@@ -60,8 +60,8 @@
   backgroundcolor = lemyellow,
   linecolor       = rulecol,
   linewidth       = 1pt,
-  innertopmargin  = 6pt,
-  innerbottommargin = 6pt,
+  innertopmargin  = 3pt,
+  innerbottommargin = 3pt,
   innerleftmargin = 8pt,
   innerrightmargin = 8pt,
   skipabove       = 8pt,
@@ -72,8 +72,8 @@
   backgroundcolor = propgray,
   linecolor       = rulecol,
   linewidth       = 1pt,
-  innertopmargin  = 6pt,
-  innerbottommargin = 6pt,
+  innertopmargin  = 3pt,
+  innerbottommargin = 3pt,
   innerleftmargin = 8pt,
   innerrightmargin = 8pt,
   skipabove       = 8pt,
@@ -167,22 +167,19 @@
 
 % ---------- TITLE BLOCK ----------
 \title{\textbf{Monotone Classification with Relative Approximations}\\[4pt]
-       \large Lecture Notes for SC2320 Data Analytics and Mining \\
-       }
-% \author{Your Name \\ \small Your University}
+       \large Lecture Notes for SC2320 Data Analytics and Mining}
+\author{Based on the paper by Yufei Tao\\
+        \small Chinese University of Hong Kong}
+\date{Published 28 February 2026}
 
-\date{\today}
 \maketitle
-
 % \begin{abstract}
 %   Brief summary of what these notes cover.
 %   Replace this with your own abstract or remove this block entirely.
 % \end{abstract}
 
-\section*{Instructions to readers}
-The flow of this set of notes is in tandem to the flow of the original paper.
-It will also go in the same flow as the presentation slides.
-Concepts/Material/Information that is auxiliary to the core ideas of this paper will be outlined at the end of each section.
+\section*{Instructions to Readers}
+This set of notes is based on the longer version of Prof Tao Yufei's paper on Monotone Classification with Relative Approximations. Each section flows accordingly with the corresponding presentation slides. Because of the perceived unorthodox writing of the paper, we first begin by providing a simple scenario to slowly build the intuition behind Monotone Classification. 
 
 % ============================================================
 % \section*{Acronym Reference}
@@ -298,7 +295,7 @@ Concepts/Material/Information that is auxiliary to the core ideas of this paper 
 % ============================================================
 \subsection{The Challenge of Entity Matching}
 \begin{definition}[Entity Matching]
-  Given two sets of entities  $E_1$  and $E_2$, the task is to determine, for every pair $(e_1, e_2) \in E_1 \times E_2$, whether $e_1$ and $e_2$ refer to the same real-world entity. It is a binary classification task that determines whether a candidate pair is a match $(+1)$ or non-match $(-1)$ \cite{tao21}.
+  Given two sets of entities  $E_1$  and $E_2$, the task is to determine, for every pair $(e_1, e_2) \in E_1 \times E_2$, whether $e_1$ and $e_2$ refer to the same real-world entity. It is a binary classification task that determines whether a candidate pair is a match $(+1)$ or non-match $(-1)$ \cite{tao26}.
 \end{definition}
 
 To motivate the problem, consider the following scenario where we have two sets of \texttt{entities} that we refer to here as product listings - $E_1$ and $E_2$, sourced from two different e-commerce platforms --- say Shopee and Lazada respectively. Each listing carries attributes such as \texttt{p-name}, \texttt{p-description}, \texttt{p-year}, and \texttt{price}. The goal of Entity Matching in this scenario is to decide, for every pair $(e_1, e_2) \in E_1 \times E_2$, if they are referring to the same real-world product. 
@@ -395,11 +392,10 @@ That is, $p$ scores at least as high as $q$ on every attribute. In the context o
 This supports the \textbf{Monotonicity Constraint}. A classifier $h$ is said to be \textbf{monotone} if:
 
 $$p \succ q \implies h(p) \geq h(q)$$
-Intuitively, if a pair $p$ is at least as similar as $q$ on every attribute, it would be contradictory for $h$ to label $p$ as a non-match $(-1)$ while labeling $q$ as a match $(+1)$. A more similar pair should receive at least as positive a label. We denote the set of all monotone classifiers as $\mathbb{H}_{mon}$. So for entity matching, the key criteria of our classifier is that it must be \textbf{monotone}.
+Intuitively, if a pair $p$ is at least as similar as $q$ on every attribute, it would be contradictory for $h$ to label $p$ as a non-match $(-1)$ while labeling $q$ as a match $(+1)$. A more similar pair should receive at least as positive a label. We denote the set of all monotone classifiers as $\mathbb{H}_{mon}$.
 
 \subsubsection{The Importance of Monotonicity}
-Remember that similarity scores are constructed in a way that higher values would indicate greater similarity for each attribute. If a pair $p$ has similarity scores higher than or equal to pair $q$ on all attributes, thereby making $p$ dominate $q$, it would be in direct contradiction of the aforementioned logic of greater similarity should a classifier label $p$ as a non-match while $q$ as a match. It's like saying: "the less similar pair is a match, the more similar pair is not.". Thus, any classifier that violates the monotonicity constraint should not be used.
-% Furthermore, considering that labels would ultimately be drawn from a human, this would be seen as a completely unreasonable verdict that no logically sound human validator would intuitively conclude.
+Remember that similarity scores are constructed in a way that higher values would indicate greater similarity for each attribute. If a pair $p$ has similarity scores higher than or equal to pair $q$ on all attributes, thereby making $p$ dominate $q$, it would be in direct contradiction of the aforementioned logic of greater similarity should a classifier label $p$ as a non-match while $q$ as a match. It's like saying: "the less similar pair is a match, but the more similar pair is not.". Thus, any classifier that violates the monotonicity constraint should not be used for Entity Matching.
 
 \subsubsection{The Optimal Monotone Error}
 Given a classifier $h$, its \textbf{error} on $P$ is defined as the number of points it misclassifies:
@@ -436,7 +432,7 @@ Given a real value $\epsilon \geq 0$, find a monotone classifier $h \in \mathbb{
 Note that when $\epsilon = 0$, the algorithm must find an exactly optimal classifier, which as we will see requires $\Omega(n)$ probes in the worst case --- essentially probing all of $P$. This justifies the introduction of $\epsilon > 0$, where even a small tolerance dramatically reduces the probing cost. The remainder of this paper studies how efficiently this problem can be solved across the full range of $\epsilon$.
 
 \subsection{Active Classification and Learning}
-To motivate Active Classification, we first revisit a familiar example of \textbf{passive classification} --- the \textbf{Perceptron Algorithm}, covered in SC2300 Machine Learning. Recall that the Perceptron is a mistake-driven algorithm that iterates through all training examples $S_n = \{(x^{(t)}, y^{(t)}), t = 1, \ldots, n\}$, where both the points \textit{and} their labels are fully visible from the start. It updates its parameter vector $\theta$ whenever a misclassification occurs, converging to a linear classifier that correctly separates all training examples --- provided they are linearly separable. This is the \textbf{realizable case}.
+To motivate Active Classification, we first look at its counterpart --- \textbf{Passive Classification} with a familiar example --- the \textbf{Perceptron Algorithm}, covered in SC2300 Machine Learning. Recall that the Perceptron is a mistake-driven algorithm that iterates through all training examples $S_n = \{(x^{(t)}, y^{(t)}), t = 1, \ldots, n\}$, where both the points \textit{and} their labels are fully visible from the start. It updates its parameter vector $\theta$ whenever a misclassification occurs, converging to a linear classifier that correctly separates all training examples --- provided they are linearly separable. This is the \textbf{realizable case}.
 
 \begin{remark}[Realizable Case]
 A classification problem is \textbf{realizable} if there exists a classifier $h \in \mathbb{H}_{mon}$ that correctly classifies all points in $P$ with zero error, i.e., $k^* = 0$. This is analogous to linear separability in the Perceptron setting.
@@ -448,14 +444,7 @@ When data is not linearly separable, the Perceptron fails to converge --- motiva
 A classification problem is \textbf{non-realizable} if no classifier $h \in \mathbb{H}_{mon}$ can achieve zero error on $P$, i.e., $k^* > 0$. This arises when the labels in $P$ contain noise --- points that violate monotonicity regardless of which classifier is chosen. This is analogous to the non-linearly separable case in SC2300.
 \end{remark}
 
-% \begin{remark}
-% Just as hinge loss introduces a tolerance for misclassified 
-% points in the non-separable case, this paper introduces 
-% $(1+\epsilon)k^*$ as a multiplicative tolerance for the 
-% non-realizable case
-% \end{remark}
-
-In the context of Entity Matching, the non-realizable case is the norm. Furthermore, unlike the Perceptron, labels are \textbf{not} visible from the start --- they are hidden and can only be revealed through probing. This is where \textbf{Active Classification} comes in. Devise a learning strategy where the algorithm selectively chooses which points to probe rather than requiring all labels upfront, gathering just enough evidence to construct a classifier with error at most $(1+\epsilon)k^*$ while minimizing the number of probes. In other words, Active Classification takes into account cost apart from just accuracy. 
+In the context of Entity Matching, the non-realizable case is the norm. Furthermore, unlike the Perceptron, labels are \textbf{not} visible from the start --- they are hidden and can only be revealed through probing. This motivates \textbf{Active Learning} as the underlying paradigm to Active Classification techniques like Monotone Classification where an algorithm selectively queries labels rather than requiring all of them upfront, gathering just enough evidence to construct a classifier with error at most $(1+\epsilon)k^*$ while minimizing the number of probes.
 
 The contrast with passive classification is summarized below:
 
@@ -475,11 +464,19 @@ Goal & Zero training error & $(1+\epsilon)k^*$ error \\
 \caption{Passive vs.\ Active Classification}
 \end{table}
 
-\subsubsection{Why Monotone Classifiers are suitable for Active Learning}
-Monotone classification is particularly well-suited to this setting because it allows label propagation at no extra cost: if an oracle confirms that a pair $p$ is a match ($+1$), then any pair $q$ that is dominated by $p$ (i.e., $q \preceq p$) cannot be a better match — so a monotone classifier must assign $q$ a label $\leq +1$, meaning it is already constrained. Symmetrically, a confirmed non-match ($-1$) propagates upward. This means a single probe can resolve the labels of many other points for free, making monotone classification a natural and efficient framework for active learning in entity matching.
+\subsubsection{Why Monotone Classifiers are Suitable for Active Learning}
+Monotone classification is particularly well-suited for active learning because it enables labels to propagate at no extra cost thanks to the monotonicity principle:
 
-\subsubsection{A Key Limitation of Active Classification}
+If a selected pair $p$ is a confirmed match ($+1$), then any pair $q$ that dominates $p$ (i.e., $q \succeq p$), is at least as similar as $p$ on every attribute and must also be a match. This causes all dominating points' labels to be resolved automatically to ($+1$). Symmetrically, a confirmed non-match ($-1$) at point $p$ will mean that any pair $q$ dominated by $p$ (i.e., $q \preceq p$), is no more similar than $p$ and would be inferred as a non-match. This will result in all dominated points being resolved to a non-matching label ($-1$).
+
+In other words, a single probe on one point can allow for surrounding points to be resolved simultaneously for free due to the monotonicity constraint.
+
+% Monotone classification is particularly well-suited for this setting because it enables labels to propagate at no extra cost: if an oracle confirms that a pair $p$ is a match ($+1$), then any pair $q$ that is dominated by $p$ (i.e., $q \preceq p$) cannot be a better match — so a monotone classifier must assign $q$ a label $\leq +1$, meaning it is already constrained. Symmetrically, a confirmed non-match ($-1$) propagates upward. This means a single probe can resolve the labels of many other points for free, making monotone classification a natural and efficient framework for active learning in entity matching.
+
+\subsubsection{A Key Challenge of Active Classification}
 Existing active learning approaches require prior knowledge of $k^*$ --- the optimal monotone error --- before the algorithm even begins. This is an unrealistic assumption in practice, since $k^*$ can only be determined after all labels are revealed. This paper proposes algorithms that require no such prior knowledge, working instead by strategically probing points to implicitly converge towards a $(1+\epsilon)$-approximate solution --- which we examine in the sections that follow.
+
+\newpage
 
 % ============================================================
 \section{RPE Algorithm}
@@ -560,7 +557,6 @@ Suppose RPE randomly probes $p_1$ first.
 \end{example}
 
 This example demonstrates how a single probe of $p_1$ is enough to determine the labels of 13 out of 16 points. The cost of 2 probes is far below the naïve cost of $n = 16$. Note, however, that the error of $5$ exceeds $k^* = 3$ --- we will see why this is expected and bounded by the $2k^*$ guarantee.
-\newpage
 
 \subsection{Guarantees}
 % State the factor-of-2 approximation guarantee.
@@ -673,11 +669,10 @@ High-probability? & No & Yes \\
 \end{table}
 
 \subsection{Chains, Dilworth's Theorem, and the A\&E Game (Supplementary)}
-
 \emph{This section covers supplementary material relevant to the cost analysis.}
 
 \subsubsection{Chains and Dilworth's Theorem\label{sec:chains}} 
-A \emph{chain} is a subset $S \subseteq P$ where every two elements are comparable under dominance: we can order them as $p_1 \preceq p_2 \preceq \dots \preceq p_{|S|}$. A \emph{chain decomposition} partitions $P$ into disjoint chains. Dilworth's theorem~\cite{dilworth50} guarantees the existence of a chain decomposition using exactly $w$ chains (where $w$ is the width of $P$).
+A \emph{chain} is a subset $S \subseteq P$ where every two elements are comparable under dominance: we can order them as $p_1 \preceq p_2 \preceq \dots \preceq p_{|S|}$. A \emph{chain decomposition} partitions $P$ into disjoint chains. Dilworth's theorem~(see~\cite{tao26}) guarantees the existence of a chain decomposition using exactly $w$ chains (where $w$ is the width of $P$).
 
 \begin{example}
 The input $P$ in Figure~\ref{fig:classification-example} can be decomposed into $6$ chains:
@@ -691,7 +686,7 @@ The input $P$ in Figure~\ref{fig:classification-example} can be decomposed into 
 \end{itemize}
 The points $p_{10}, p_{11}, p_{12}, p_{16}, p_{13}, p_{14}$ indicate the absence of any chain decomposition of $P$ having less than $6$ chains.
 \end{example}
-
+\newpage
 \subsubsection{A\&E Game\label{sec:ae}} 
 To analyze RPE's cost within a single chain, the paper introduces a two-player \emph{Attrition-and-Elimination (A\&E) game} on a chain $C$ of $m$ points. In each round:
 \begin{itemize}
@@ -1285,7 +1280,7 @@ The proof introduces two random processes that generate the same distribution ov
   \item Run algorithm $A$ on the labelled $P$.
   \item Measure $R_1 = \mathrm{err}_P(h_A) / \kstar$.
 \end{enumerate}
-
+\newpage
 \noindent\textbf{RP-2 (Labels on demand):}
 \begin{enumerate}
   \item Sample $\mu \in \{\mu_1, \mu_2\}^w$ uniformly at random.
@@ -1399,20 +1394,24 @@ Several conclusions emerge:
   The paper concludes that the true complexity of Problem~\ref{prob:main} is $\Theta(w/\varepsilon^2)$ up to polylogarithmic factors. This is a strong characterization: regardless of the input distribution, dimensionality, or value of $\kstar$, the cost is essentially determined by $w$ and $\varepsilon$ alone.
 \end{remark}
 
-
-\newpage
-
 % ============================================================
 \section*{Summary}
 % ============================================================
-% Brief wrap-up: key takeaways, significance of results, and open questions.
+
+These notes studied the problem of \textbf{Monotone Classification} in an active learning setting: given a point set $P$ with hidden labels, find a monotone classifier with error at most $(1+\varepsilon)k^*$ while minimising the number of label queries (probes).
+
+Two algorithms were presented. The \textbf{RPE algorithm} (Section~2) achieves expected error $2k^*$ using $O(w \log(n/w))$ probes — simple and efficient, but limited to a factor-2 approximation. The \textbf{Coreset algorithm} (Section~3) overcomes this by constructing a relative-comparison coreset, achieving $(1+\varepsilon)k^*$ error with high probability using $O\!\left(\frac{w}{\varepsilon^2}\log\frac{n}{w}\cdot\log n\right)$ probes for any user-chosen $\varepsilon > 0$.
+
+Section~4 established matching lower bounds: exact optimality ($\varepsilon = 0$) inherently requires $\Omega(n)$ probes; any $(1+\varepsilon)$-approximate algorithm requires $\Omega(w/\varepsilon^2)$ probes. Together, these place the true complexity of the problem at $\Theta(w/\varepsilon^2)$ up to polylogarithmic factors, with width $w$ — not $n$ or $d$ — as the key parameter.
+
+\medskip\noindent
+The proofs in these notes are intentionally kept lean, focusing on key ideas and intuition rather than full rigour — readers seeking complete formal proofs are referred to the original paper~\cite{tao26}. \textbf{One open problem remains}: closing the polylogarithmic gap of $O\!\left(\log\frac{n}{w}\cdot\log n\right)$ between the upper and lower bounds for the general $\varepsilon > 0$ case.
 
 % ============================================================
 % \section*{References}
 % ============================================================
 \begin{thebibliography}{9}
-  \bibitem{tao18} Y.~Tao, ``Monotone Classification,'' \emph{PODS'18}.
-  \bibitem{tao21} Y.~Tao, ``Monotone Classification (Extended),'' \emph{PODS'21}.
+  \bibitem{tao26} Y.~Tao, ``Monotone Classification with Relative Approximations,'' Chinese University of Hong Kong, 28 February 2026.
 \end{thebibliography}
 
 \end{document}
